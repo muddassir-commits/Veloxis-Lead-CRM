@@ -1,0 +1,35 @@
+{
+  "name": "veloxis-outreach-dashboard",
+  "version": "1.0.0",
+  "description": "Veloxis Global — Lead Generation & Outreach Command Center",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "setup:email": "node scripts/setup-email.js",
+    "setup:supabase": "node scripts/setup-supabase.js",
+    "seed:templates": "node scripts/seed-templates.js",
+    "clean:db": "node scripts/clean-db.js",
+    "test:email": "node scripts/test-email.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5",
+    "dns2": "^2.1.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.15",
+    "open": "^10.1.0",
+    "puppeteer": "^23.3.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "uuid": "^10.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Muddassir Ali",
+  "license": "ISC"
+}

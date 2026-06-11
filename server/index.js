@@ -1,0 +1,92 @@
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const dotenv = require('dotenv');
+const sequenceService = require('./services/sequenceService');
+
+// Load environment variables
+dotenv.config({ path: path.join(__dirname, '../.env') });
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Enable CORS & JSON Parsing
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static frontend dashboard assets
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Email Open Tracking Route (must run BEFORE /api routing for neat URLs)
+const trackerRouter = require('./routes/tracker');
+app.use('/track', trackerRouter);
+
+// Bind API Sub-routes
+const leadsRouter = require('./routes/leads');
+const scraperRouter = require('./routes/scraper');
+const emailRouter = require('./routes/email');
+const templatesRouter = require('./routes/templates');
+const plannerRouter = require('./routes/planner');
+const analyticsRouter = require('./routes/analytics');
+const icpRouter = require('./routes/icp');
+const settingsRouter = require('./routes/settings');
+
+app.use('/api/leads', leadsRouter);
+app.use('/api/scrape', scraperRouter);
+app.use('/api/email', emailRouter);
+app.use('/api/templates', templatesRouter);
+app.use('/api/planner', plannerRouter);
+app.use('/api/analytics', analyticsRouter);
+app.use('/api/icp', icpRouter);
+app.use('/api/settings', settingsRouter);
+
+// Health Check Endpoint for Render / UptimeRobot Keep-Alive
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    status: 'online',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Fallback: Redirect all non-API paths to Single Page App index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// Start Automated Sequence Scheduler Cron
+try {
+  sequenceService.startScheduler();
+} catch (cronErr) {
+  console.error('❌ Failed to start cron scheduler:', cronErr.message);
+}
+
+// Start Server Listening
+const server = app.listen(PORT, () => {
+  console.log(`================================================================`);
+  console.log(`🚀 VELOXIS OUTREACH COMMAND CENTER SERVER ONLINE`);
+  console.log(`📡 URL: http://localhost:${PORT}`);
+  console.log(`⚙️  Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`================================================================`);
+});
+
+// Graceful Shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received. Shutting down gracefully...');
+  sequenceService.stopScheduler();
+  server.close(() => {
+    console.log('Server connection closed.');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT signal received. Shutting down gracefully...');
+  sequenceService.stopScheduler();
+  server.close(() => {
+    console.log('Server connection closed.');
+    process.exit(0);
+  });
+});

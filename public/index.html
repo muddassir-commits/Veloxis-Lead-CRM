@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veloxis Global — Outreach Command Center</title>
+  <meta name="description" content="ROI-driven lead generation and automated cold email outreaching platform for Veloxis Global agency.">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- Lucide Icons for high quality vector glyphs -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div id="app-container">
+    
+    <!-- ==========================================
+         SIDEBAR NAVIGATION
+         ========================================== -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-icon">
+          <i data-lucide="zap"></i>
+        </div>
+        <div class="logo-text">
+          <h2>Veloxis</h2>
+          <span>Outreach Hub</span>
+        </div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-screen="dashboard" id="nav-dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Command Center</span>
+        </a>
+        <a class="nav-item" data-screen="generator" id="nav-generator">
+          <i data-lucide="search-code"></i>
+          <span>Lead Generator</span>
+        </a>
+        <a class="nav-item" data-screen="leads" id="nav-leads">
+          <i data-lucide="users"></i>
+          <span>Lead CRM</span>
+        </a>
+        <a class="nav-item" data-screen="templates" id="nav-templates">
+          <i data-lucide="file-text"></i>
+          <span>Outreach Hub</span>
+        </a>
+        <a class="nav-item" data-screen="sequences" id="nav-sequences">
+          <i data-lucide="git-branch"></i>
+          <span>Sequence Manager</span>
+        </a>
+        <a class="nav-item" data-screen="planner" id="nav-planner">
+          <i data-lucide="calendar"></i>
+          <span>Weekly Planner</span>
+        </a>
+        <a class="nav-item" data-screen="icp" id="nav-icp">
+          <i data-lucide="target"></i>
+          <span>ICP Builder</span>
+        </a>
+        <a class="nav-item" data-screen="analytics" id="nav-analytics">
+          <i data-lucide="line-chart"></i>
+          <span>Analytics</span>
+        </a>
+        <a class="nav-item" data-screen="settings" id="nav-settings">
+          <i data-lucide="settings"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="avatar">MA</div>
+        <div class="user-info">
+          <span class="name">Muddassir Ali</span>
+          <span class="role">Founder, Veloxis</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==========================================
+         MAIN CONTENT VIEWPORT
+         ========================================== -->
+    <main id="main-viewport">
+      
+      <!-- SCREEN 1: COMMAND CENTER -->
+      <section id="screen-dashboard" class="screen active">
+        <div class="screen-header">
+          <div class="header-title">
+            <h1 id="dashboard-welcome">Good Morning, Muddassir</h1>
+            <p>Here is your outreach velocity for today.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" onclick="app.refreshDashboard()"><i data-lucide="refresh-cw"></i> Refresh</button>
+            <button class="btn btn-primary" onclick="app.showScreen('generator')"><i data-lucide="plus"></i> Get Leads</button>
+          </div>
+        </div>
+        
+        <!-- Stat Cards -->
+        <div class="stat-grid">
+          <div class="card stat-card glow">
+            <div class="stat-info">
+              <span class="stat-label">Leads Tracked</span>
+              <span class="stat-value" id="stat-total-leads">0</span>
+            </div>
+            <div class="stat-icon primary"><i data-lucide="users"></i></div>
+          </div>
+          <div class="card stat-card glow">
+            <div class="stat-info">
+              <span class="stat-label">Emails Contacted</span>
+              <span class="stat-value" id="stat-total-sent">0</span>
+            </div>
+            <div class="stat-icon cyan"><i data-lucide="mail"></i></div>
+          </div>
+          <div class="card stat-card glow">
+            <div class="stat-info">
+              <span class="stat-label">Email Open Rate</span>
+              <span class="stat-value" id="stat-open-rate">0%</span>
+            </div>
+            <div class="stat-icon success"><i data-lucide="eye"></i></div>
+          </div>
+          <div class="card stat-card glow">
+            <div class="stat-info">
+              <span class="stat-label">Replies Received</span>
+              <span class="stat-value" id="stat-replies">0</span>
+            </div>
+            <div class="stat-icon warning"><i data-lucide="message-square"></i></div>
+          </div>
+        </div>
+        
+        <div class="section-grid">
+          <!-- Funnel / Target Progress -->
+          <div class="card glow">
+            <h3>Daily Outreach Goals</h3>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Tracking targets according to Hormozi's model.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                  <span>📧 Cold Email Sequence</span>
+                  <span id="progress-email-text">0 / 100 Sent</span>
+                </div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill" id="progress-email-bar" style="width: 0%"></div>
+                </div>
+              </div>
+              
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                  <span>🔗 LinkedIn Connections</span>
+                  <span id="progress-linkedin-text">0 / 10 Sent</span>
+                </div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill" id="progress-linkedin-bar" style="width: 0%; background: var(--grad-primary);"></div>
+                </div>
+              </div>
+              
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                  <span>📸 Instagram DMs</span>
+                  <span id="progress-instagram-text">0 / 30 Sent</span>
+                </div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill" id="progress-instagram-bar" style="width: 0%; background: var(--grad-hot);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Recent Activity -->
+          <div class="card glow">
+            <h3>Recent Activity</h3>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Live updates from your sequences.</p>
+            <div class="activity-feed" id="dashboard-activity-feed">
+              <!-- Rendered Dynamically -->
+              <div class="loading-container"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: LEAD GENERATOR -->
+      <section id="screen-generator" class="screen">
+        <div class="screen-header">
+          <div class="header-title">
+            <h1>Lead Generator</h1>
+            <p>Scrape businesses on Google Maps and find verified emails in 1-Click.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" onclick="generator.triggerCSVImport()"><i data-lucide="upload"></i> Upload CSV</button>
+            <input type="file" id="csv-file-input" style="display: none;" accept=".csv">
+          </div>
+        </div>
+        
+        <div class="card">
+          <form id="scraper-form" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: flex-end;">
+            <div class="form-group">
+              <label for="scrape-query">Keywords / Business Type</label>
+              <input type="text" id="scrape-query" class="form-control" placeholder="e.g. coaching institutes, real estate agents, gyms" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="scrape-region">Region / City</label>
+              <input type="text" id="scrape-region" class="form-control" placeholder="e.g. Lucknow, Delhi, London" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="scrape-limit">Max Results</label>
+              <select id="scrape-limit" class="form-control">
+                <option value="5">5 leads</option>
+                <option value="10" selected>10 leads</option>
+                <option value="20">20 leads</option>
+                <option value="50">50 leads</option>
+              </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="height: 42px;"><i data-lucide="search"></i> Scrape Maps</button>
+          </form>
+        </div>
+        
+        <!-- Scraper Progress / Loader -->
+        <div id="scraper-loading" class="card" style="display: none; justify-content: center; align-items: center; padding: 40px;">
+          <div class="loading-container">
+            <div class="spinner spinner-lg"></div>
+            <p style="margin-top: 15px; font-weight: 600;" id="scraper-loading-text">Launching browser scraper...</p>
+            <p style="font-size: 12px; color: var(--text-muted);">Please hold on, Google Maps searches are being parsed safely via Puppeteer.</p>
+          </div>
+        </div>
+        
+        <!-- Results Table -->
+        <div class="card" id="scraper-results-card" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Scraped Businesses (<span id="scraped-count">0</span>)</h3>
+            <button class="btn btn-primary" onclick="generator.importSelectedLeads()"><i data-lucide="download"></i> Import Selected to CRM</button>
+          </div>
+          
+          <div class="table-responsive">
+            <table class="custom-table" id="scraper-results-table">
+              <thead>
+                <tr>
+                  <th width="40"><input type="checkbox" id="scrape-select-all" checked></th>
+                  <th>Business Name</th>
+                  <th>Website</th>
+                  <th>Phone</th>
+                  <th>Rating</th>
+                  <th>Location</th>
+                  <th>Industry</th>
+                </tr>
+              </thead>
+              <tbody id="scraper-results-body">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: LEAD CRM -->
+      <section id="screen-leads" class="screen">
+        <div class="screen-header">
+          <div class="header-title">
+            <h1>Lead CRM</h1>
+            <p>Manage prospects, follow up pipelines, and initiate outreaches.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" onclick="leads.openAddLeadModal()"><i data-lucide="plus"></i> Add Lead</button>
+          </div>
+        </div>
+        
+        <!-- CRM Filters and Toggles -->
+        <div class="card" style="padding: 16px; display: flex; justify-content: space-between; gap: 15px; flex-wrap: wrap; align-items: center;">
+          <div style="display: flex; gap: 10px; flex-grow: 1; max-width: 600px;">
+            <div class="search-wrapper" style="flex-grow: 1;">
+              <i data-lucide="search"></i>
+              <input type="text" id="crm-search" class="form-control" placeholder="Search leads by name, email, website..." oninput="leads.filterLeads()">
+            </div>
+            <select id="crm-filter-status" class="form-control" style="width: 150px;" onchange="leads.filterLeads()">
+              <option value="">All Statuses</option>
+              <option value="New">New</option>
+              <option value="Researched">Researched</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Followed Up">Followed Up</option>
+              <option value="Replied">Replied</option>
+              <option value="Meeting">Meeting</option>
+              <option value="Won">Won</option>
+            </select>
+          </div>
+          
+          <div class="toggle-tabs">
+            <button class="toggle-tab-btn active" id="btn-view-table" onclick="leads.setView('table')"><i data-lucide="table"></i> Table</button>
+            <button class="toggle-tab-btn" id="btn-view-kanban" onclick="leads.setView('kanban')"><i data-lucide="columns"></i> Kanban</button>
+          </div>
+        </div>
+        
+        <!-- Loader -->
+        <div id="crm-loading" class="loading-container"><div class="spinner spinner-lg"></div></div>
+        
+        <!-- Table View -->
+        <div class="card" id="crm-table-card">
+          <div class="table-responsive">
+            <table class="custom-table" id="crm-table">
+              <thead>
+                <tr>
+                  <th width="40"><input type="checkbox" id="crm-select-all"></th>
+                  <th>Lead Name</th>
+                  <th>Company</th>
+                  <th>Email</th>
+                  <th>Website</th>
+                  <th>Status</th>
+                  <th>Score</th>
+                  <th width="100">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="crm-table-body">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; font-size: 13px; color: var(--text-secondary);">
+            <span>Showing <span id="crm-showing-count">0</span> leads</span>
+            <div style="display: flex; gap: 10px;" id="crm-bulk-actions" style="display: none;">
+              <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="leads.bulkEnrich()"><i data-lucide="sparkles"></i> Bulk Find Emails</button>
+              <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="leads.bulkStartSequence()"><i data-lucide="play"></i> Bulk Start Sequence</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Kanban Board View -->
+        <div id="crm-kanban-card" class="kanban-board" style="display: none;">
+          <!-- Stage Columns rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- SCREEN 4: TEMPLATES HUB -->
+      <section id="screen-templates" class="screen">
+        <div class="screen-header">
+          <div class="header-title">
+            <h1>Outreach Hub</h1>
+            <p>Hormozi-structured templates for different channels and stages.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary" onclick="templates.openCreateModal()"><i data-lucide="plus"></i> New Template</button>
+          </div>
+        </div>
+        
+        <div class="toggle-tabs" style="margin-bottom: 15px;">
+          <button class="toggle-tab-btn active" id="btn-temp-email" onclick="templates.setType('Email')"><i data-lucide="mail"></i> Cold Email (8)</button>
+          <button class="toggle-tab-btn" id="btn-temp-linkedin" onclick="templates.setType('LinkedIn')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn (5)</button>
+          <button class="toggle-tab-btn" id="btn-temp-instagram" onclick="templates.setType('Instagram')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg> Instagram (4)</button>
+        </div>
+        
+        <div class="template-grid" id="templates-container">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- SCREEN 5: SEQUENCE MANAGER -->
+      <section id="screen-sequences" class="screen">
+        <div class="screen-header">
+          <div class="header-title">
+            <h1>Sequence Manager</h1>
+            <p>Monitor active multi-step email campaigns running 24/7 in the cloud.</p>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="table-responsive">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Lead Name</th>
+                  <th>Current Step</th>
+                  <th>Status</th>
+                  <th>Last Sent</th>
+                  <th>Next Scheduled Send</th>
+                  <th width="150">Controls</th>
+                </tr>
+              </thead>
+              <tbody id="sequence-table-body">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 6: WEEKLY PLANNER -->
+      <section id="screen-planner" class="screen">
+        <div class="screen-header">
+          <div class="header-title">
+            <h1>Weekly Planner</h1>
+            <p>Daily breakdown of automated sends and manual connection lists.</p>
+          </div>
+        </div>
+        
+        <div class="planner-grid" id="planner-calendar-grid">
+          <!-- Injected dynamically for Mon-Sat -->
+        </div>
+      </section>
+
+      <!-- SCREEN 7: ICP BUILDER -->
+      <section id="screen-icp" class="screen">
+        <div class="screen-header">
+          <div class="header-title">
+            <h1>ICP Builder</h1>
+            <p>Lock in your Ideal Customer Profile targets to optimize Google Maps leads.</p>
+          </div>
+        </div>
+        
+        <div class="section-grid">
+          <div class="card glow">
+            <h3 style="margin-bottom: 20px;">Target Definition Form</h3>
+            
+            <form id="icp-form" style="display: flex; flex-direction: column; gap: 20px;" onsubmit="icp.saveICP(event)">
+              <input type="hidden" id="icp-id">
+              
+              <div class="form-group">
+                <label>Target Industries</label>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="Education / Coaching" checked> 🎓 Education & Coaching</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="Real Estate" checked> 🏠 Real Estate Developers</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="E-commerce" checked> 🛒 E-commerce / D2C</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="Gyms / Fitness" checked> 💪 Gyms & Fitness</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="Clinics / Healthcare"> 🏥 Healthcare / Clinics</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="B2B / MSME"> 🏭 MSMEs / Manufactures</label>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>Geographic Markets</label>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions" value="India" checked> 🇮🇳 India (Domestic)</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions" value="USA" checked> 🇺🇸 United States</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions" value="UK" checked> 🇬🇧 United Kingdom</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions" value="Singapore" checked> 🇸🇬 Singapore</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions" value="Australia" checked> 🇦🇺 Australia</label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Decision Maker Titles</label>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles" value="Founder" checked> Founder</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles" value="Owner" checked> Owner</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles" value="CEO" checked> CEO</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles" value="Marketing Manager"> Marketing Manager</label>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="align-self: flex-start;"><i data-lucide="save"></i> Save Target Profile</button>
+            </form>
+          </div>
+          
+          <!-- ICP Visual Card -->
+          <div class="card glow" style="display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgba(20, 22, 37, 0.95), rgba(108, 99, 255, 0.05)); border-color: rgba(108, 99, 255, 0.25);">
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <span style="font-size: 11px; text-transform:uppercase; color: var(--cyan); font-weight:700; letter-spacing:0.1em;">Target Matrix</span>
+                <i data-lucide="fingerprint" style="color: var(--cyan);"></i>
+              </div>
+              <h2 id="icp-card-name" style="font-size: 24px; font-weight:800; margin-bottom: 10px;">Veloxis High-Ticket ICP</h2>
+              <p style="color: var(--text-secondary); font-size:13px; line-height: 1.6;">Locked configuration used by the web scraping client to filter search directories.</p>
+              
+              <div style="margin-top: 30px; display:flex; flex-direction:column; gap:15px;">
+                <div>
+                  <h4 style="font-size: 11px; text-transform:uppercase; color: var(--text-muted); margin-bottom:4px;">Target Verticals</h4>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px;" id="icp-view-industries"></div>
+                </div>
+                <div>
+                  <h4 style="font-size: 11px; text-transform:uppercase; color: var(--text-muted); margin-bottom:4px;">Target Markets</h4>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px;" id="icp-view-regions"></div>
+                </div>
+                <div>
+                  <h4 style="font-size: 11px; text-transform:uppercase; color: var(--text-muted); margin-bottom:4px;">Decision Makers</h4>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px;" id="icp-view-roles"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div style="border-top: 1px solid var(--border-color); padding-top:20px; margin-top: 30px; display:flex; align-items:center; gap:12px;">
+              <div style="background:var(--cyan-glow); color:var(--cyan); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center;"><i data-lucide="check" style="width:16px;height:16px;"></i></div>
+              <span style="font-size:12px; font-weight:600; color: var(--text-secondary);">ICP logic actively filters Google Maps results</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 8: ANALYTICS -->
+      <section id="screen-analytics" class="screen">
+        <div class="screen-header">
+          <div class="header-title">
+            <h1>Analytics</h1>
+            <p>Track your campaign metrics, outreach velocity, and email open metrics.</p>
+          </div>
+        </div>
+        
+        <div class="section-grid">
+          <!-- Main Chart -->
+          <div class="card glow">
+            <h3>Outreach Volume Trends</h3>
+            <p style="color: var(--text-secondary); font-size: 13px;">Historical timeline logs of email outreaches dispatched.</p>
+            <div class="chart-container" id="analytics-timeline-container">
+              <!-- SVG chart rendered dynamically -->
+            </div>
+          </div>
+          
+          <!-- Pipeline Funnel -->
+          <div class="card glow">
+            <h3>Pipeline Stages</h3>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Visual flow of lead conversions.</p>
+            <div class="funnel-list" id="analytics-funnel-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+        
+        <div class="section-grid" style="grid-template-columns: repeat(2, 1fr);">
+          <!-- Template Performance -->
+          <div class="card glow">
+            <h3>Template Response Rates</h3>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Open volume tracking per outreach template.</p>
+            <div class="table-responsive">
+              <table class="custom-table" id="analytics-templates-table">
+                <thead>
+                  <tr>
+                    <th>Template Name</th>
+                    <th>Type</th>
+                    <th>Sends</th>
+                  </tr>
+                </thead>
+                <tbody id="analytics-templates-body">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Geographical Leads -->
+          <div class="card glow">
+            <h3>Top Target Industries</h3>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Distribution of leads by category.</p>
+            <div class="funnel-list" id="analytics-industries-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 9: SETTINGS -->
+      <section id="screen-settings" class="screen">
+        <div class="screen-header">
+          <div class="header-title">
+            <h1>Settings</h1>
+            <p>Configure Hostinger SMTP connections, daily outreach quotas, and your signature.</p>
+          </div>
+        </div>
+        
+        <div class="section-grid">
+          <div class="card glow">
+            <h3>System Status</h3>
+            <div style="display:flex; flex-direction:column; gap:15px; margin-top:20px;">
+              <div style="display:flex; justify-content:space-between; padding:12px; background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:8px;">
+                <span style="font-weight:600;">Hostinger SMTP Connection</span>
+                <span id="settings-smtp-status" style="font-weight:600; color:var(--text-muted);"><i class="spinner" style="display:inline-block; vertical-align:middle; width:14px; height:14px;"></i> Checking...</span>
+              </div>
+              <button class="btn btn-secondary" onclick="settings.testSMTP()"><i data-lucide="send"></i> Test SMTP Link</button>
+            </div>
+            
+            <div style="border-top:1px solid var(--border-color); margin-top:25px; padding-top:25px;">
+              <h3>Timezone & Allowed Schedule</h3>
+              <form id="settings-schedule-form" style="margin-top:15px; display:flex; flex-direction:column; gap:15px;" onsubmit="settings.saveSchedule(event)">
+                <div style="display:flex; gap:15px;">
+                  <div class="form-group" style="flex:1;">
+                    <label>Start Hour (9 = 9 AM)</label>
+                    <input type="number" min="0" max="23" id="schedule-start" class="form-control" value="9">
+                  </div>
+                  <div class="form-group" style="flex:1;">
+                    <label>End Hour (18 = 6 PM)</label>
+                    <input type="number" min="0" max="23" id="schedule-end" class="form-control" value="18">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Sending Days (Checked = Active)</label>
+                  <div style="display:flex; flex-wrap:wrap; gap:10px; background:rgba(0,0,0,0.15); padding:10px; border-radius:6px;">
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="1" checked> Mon</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="2" checked> Tue</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="3" checked> Wed</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="4" checked> Thu</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="5" checked> Fri</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="6" checked> Sat</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="0"> Sun</label>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="align-self: flex-start;"><i data-lucide="save"></i> Save Schedule</button>
+              </form>
+            </div>
+          </div>
+          
+          <div class="card glow">
+            <h3>Email Signature</h3>
+            <p style="color:var(--text-secondary); font-size:12px; margin-top:4px; margin-bottom:15px;">This will append to the {{signature}} tag in email sequences.</p>
+            <form id="settings-signature-form" onsubmit="settings.saveSignature(event)">
+              <div class="form-group">
+                <textarea id="settings-signature" class="form-control" rows="8" style="font-family: monospace; font-size: 13px;" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top:15px;"><i data-lucide="save"></i> Save Signature</button>
+            </form>
+            
+            <div style="border-top:1px solid var(--border-color); margin-top:25px; padding-top:25px;">
+              <h3>Daily Quota Limits</h3>
+              <form id="settings-limits-form" style="margin-top:15px; display:flex; flex-direction:column; gap:15px;" onsubmit="settings.saveLimits(event)">
+                <div class="form-group">
+                  <label>Daily Email Outreach limit</label>
+                  <input type="number" id="limit-email" class="form-control" value="100">
+                </div>
+                <div class="form-group">
+                  <label>Daily LinkedIn connection limit</label>
+                  <input type="number" id="limit-linkedin" class="form-control" value="10">
+                </div>
+                <div class="form-group">
+                  <label>Daily Instagram DM limit</label>
+                  <input type="number" id="limit-instagram" class="form-control" value="30">
+                </div>
+                <button type="submit" class="btn btn-primary" style="align-self: flex-start;"><i data-lucide="save"></i> Save Limits</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Danger Zone Card -->
+          <div class="card glow" style="border-color: rgba(239, 68, 68, 0.2); background: linear-gradient(135deg, rgba(20, 22, 37, 0.95), rgba(239, 68, 68, 0.02)); grid-column: span 1;">
+            <h3 style="color: var(--danger); display: flex; align-items: center; gap: 8px;"><i data-lucide="shield-alert" style="width: 18px; height: 18px;"></i> Danger Zone</h3>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-top: 5px; margin-bottom: 20px;">Permanent actions that reset outreach pipelines.</p>
+            
+            <div style="display:flex; flex-direction:column; gap:15px;">
+              <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-secondary);">
+                <strong>Clean CRM Data:</strong> This will delete all prospects/leads, active sequences, tracking logs, and outreach history from the database. Default settings and outreach templates will remain intact.
+              </div>
+              <button class="btn btn-danger" onclick="settings.clearCRMData()" style="align-self: flex-start; gap: 8px;"><i data-lucide="trash-2"></i> Reset CRM & Clear Test Data</button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ==========================================
+       CRM SPLIT SLIDE-OUT DETAIL PANEL
+       ========================================== -->
+  <div id="lead-side-panel" class="side-panel">
+    <div class="side-panel-header">
+      <h2 id="panel-lead-name">Lead Details</h2>
+      <button class="btn btn-secondary btn-icon" onclick="leads.closeSidePanel()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="side-panel-content" id="panel-lead-content">
+      <!-- Injected dynamically -->
+    </div>
+  </div>
+
+  <!-- ==========================================
+       CUSTOM TOAST NOTIFICATION CONTAINER
+       ========================================== -->
+  <div id="toast-container"></div>
+
+  <!-- ==========================================
+       MODAL WINDOW OVERLAYS
+       ========================================== -->
+  <!-- 1. Add / Edit Lead Modal -->
+  <div class="modal-overlay" id="modal-lead">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-lead-title">Add New Lead</h3>
+        <button class="btn btn-secondary btn-icon" onclick="leads.closeLeadModal()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="modal-lead-form" onsubmit="leads.saveLead(event)">
+        <input type="hidden" id="modal-lead-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="lead-input-name">Full Name *</label>
+            <input type="text" id="lead-input-name" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="lead-input-company">Company</label>
+            <input type="text" id="lead-input-company" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="lead-input-email">Email Address</label>
+            <input type="email" id="lead-input-email" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="lead-input-website">Website URL</label>
+            <input type="text" id="lead-input-website" class="form-control" placeholder="https://example.com">
+          </div>
+          <div style="display:flex; gap:10px;">
+            <div class="form-group" style="flex:1;">
+              <label for="lead-input-linkedin">LinkedIn Handle</label>
+              <input type="text" id="lead-input-linkedin" class="form-control" placeholder="username">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="lead-input-instagram">Instagram Handle</label>
+              <input type="text" id="lead-input-instagram" class="form-control" placeholder="username">
+            </div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <div class="form-group" style="flex:1;">
+              <label for="lead-input-city">City</label>
+              <input type="text" id="lead-input-city" class="form-control">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="lead-input-country">Country</label>
+              <input type="text" id="lead-input-country" class="form-control" value="India">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="lead-input-industry">Industry / Category</label>
+            <input type="text" id="lead-input-industry" class="form-control" placeholder="e.g. Gym, Coaching Institute, Real Estate">
+          </div>
+          <div class="form-group">
+            <label for="lead-input-notes">Notes</label>
+            <textarea id="lead-input-notes" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="leads.closeLeadModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Lead</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Create / Edit Template Modal -->
+  <div class="modal-overlay" id="modal-template">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-temp-title">Add Template</h3>
+        <button class="btn btn-secondary btn-icon" onclick="templates.closeModal()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="modal-temp-form" onsubmit="templates.saveTemplate(event)">
+        <input type="hidden" id="modal-temp-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="temp-input-name">Template Name *</label>
+            <input type="text" id="temp-input-name" class="form-control" required placeholder="e.g. Email 1: The Diagnosis">
+          </div>
+          <div style="display:flex; gap:15px;">
+            <div class="form-group" style="flex:1;">
+              <label for="temp-input-type">Channel Type</label>
+              <select id="temp-input-type" class="form-control" onchange="templates.toggleSubjectField(this.value)">
+                <option value="Email" selected>Email</option>
+                <option value="LinkedIn">LinkedIn</option>
+                <option value="Instagram">Instagram</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="temp-input-principle">Hormozi Principle / Angle</label>
+              <input type="text" id="temp-input-principle" class="form-control" placeholder="e.g. Dream Outcome">
+            </div>
+          </div>
+          <div class="form-group" id="temp-subject-group">
+            <label for="temp-input-subject">Subject Line *</label>
+            <input type="text" id="temp-input-subject" class="form-control" placeholder="e.g. quick question about {{company}}">
+          </div>
+          <div class="form-group">
+            <label for="temp-input-body">Message Body *</label>
+            <textarea id="temp-input-body" class="form-control" rows="8" placeholder="Use placeholders like {{name}}, {{company}}, {{website}}, {{signature}}..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="templates.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Template</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Manual Email Sending Modal -->
+  <div class="modal-overlay" id="modal-send-manual">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Send Custom Outreach Email</h3>
+        <button class="btn btn-secondary btn-icon" onclick="leads.closeSendModal()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="modal-send-form" onsubmit="leads.sendManualEmail(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="send-input-to">Recipient Email</label>
+            <input type="email" id="send-input-to" class="form-control" readonly required>
+          </div>
+          <div class="form-group">
+            <label for="send-input-subject">Subject Line *</label>
+            <input type="text" id="send-input-subject" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="send-input-body">Message HTML/Body *</label>
+            <textarea id="send-input-body" class="form-control" rows="8" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="leads.closeSendModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i data-lucide="send"></i> Dispatch Email</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       CORE SPA JAVASCRIPT CONTROLLERS
+       ========================================== -->
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/generator.js"></script>
+  <script src="js/leads.js"></script>
+  <script src="js/templates.js"></script>
+  <script src="js/sequences.js"></script>
+  <script src="js/planner.js"></script>
+  <script src="js/icp.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
