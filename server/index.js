@@ -56,6 +56,16 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
+// Global Error Handler Middleware to catch any unhandled request errors gracefully
+app.use((err, req, res, next) => {
+  console.error('🔥 Global Server Error:', err.stack || err.message);
+  res.status(500).json({
+    success: false,
+    error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
 // Start Automated Sequence Scheduler Cron
 try {
   sequenceService.startScheduler();

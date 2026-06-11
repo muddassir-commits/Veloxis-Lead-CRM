@@ -118,7 +118,7 @@ async function runFullVerification() {
 
     console.log('⏳ Waiting for side panel to open and load data...');
     await page.waitForSelector('#lead-side-panel.open', { timeout: 5000 });
-    await page.waitForSelector('#panel-lead-content div:not(.loading-container)', { timeout: 5000 });
+    await page.waitForSelector('#panel-notes', { timeout: 5000 });
     await new Promise(resolve => setTimeout(resolve, 1000)); // small extra buffer for rendering
     await page.screenshot({ path: path.join(verifyDir, '5_lead_detail_panel.png') });
     console.log('📸 Lead Detail Side Panel screenshotted.');

@@ -2,6 +2,18 @@ const express = require('express');
 const router = express.Router();
 const supabase = require('../services/supabaseService');
 
+// Helper to normalize empty strings to null for database compatibility
+const sanitizeLeadData = (data) => {
+  if (!data) return data;
+  const sanitized = { ...data };
+  for (const key in sanitized) {
+    if (sanitized[key] === '') {
+      sanitized[key] = null;
+    }
+  }
+  return sanitized;
+};
+
 // 1. GET all leads (with search & filters)
 router.get('/', async (req, res) => {
   try {
@@ -89,7 +101,7 @@ router.get('/:id', async (req, res) => {
 // 3. POST - Create new lead
 router.post('/', async (req, res) => {
   try {
-    const leadData = req.body;
+    const leadData = sanitizeLeadData(req.body);
     const { data, error } = await supabase
       .from('leads')
       .insert([leadData])
@@ -111,9 +123,11 @@ router.post('/bulk', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Input must be an array of leads' });
     }
 
+    const sanitizedLeads = leads.map(sanitizeLeadData);
+
     const { data, error } = await supabase
       .from('leads')
-      .insert(leads)
+      .insert(sanitizedLeads)
       .select();
 
     if (error) throw error;
@@ -127,7 +141,7 @@ router.post('/bulk', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const updates = sanitizeLeadData(req.body);
     updates.updated_at = new Date().toISOString();
 
     const { data, error } = await supabase
