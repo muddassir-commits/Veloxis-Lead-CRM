@@ -62,12 +62,14 @@ router.get('/', async (req, res) => {
       .slice(-30); // Last 30 days
 
     // 4. Template performance breakdown
-    const { data: templateStats } = await supabase
+    const { data: templateStats, error: tempErr } = await supabase
       .from('sequence_history')
       .select(`
         id, step,
         templates (name, type, principle)
       `);
+      
+    if (tempErr) throw tempErr;
       
     const templatePerformance = {};
     if (templateStats) {
