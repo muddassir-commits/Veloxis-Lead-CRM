@@ -44,6 +44,10 @@ const api = {
     return this.request('/api/scrape/social', 'POST', { platform, niche, city, maxResults });
   },
 
+  async searchApollo(keywords, titles, locations, maxResults) {
+    return this.request('/api/scrape/apollo', 'POST', { keywords, titles, locations, maxResults });
+  },
+
   async enrichLead(leadId) {
     return this.request('/api/scrape/enrich', 'POST', { leadId });
   },

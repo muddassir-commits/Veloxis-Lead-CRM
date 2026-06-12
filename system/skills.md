@@ -67,9 +67,12 @@ Launching paid Facebook & Instagram campaigns that deliver a high Return on Ad S
 Leverage internal proprietary scraping, verification, and CRM tools to identify, enrich, and close target agency clients.
 
 ### Capabilities & Systems:
-1. **Google Maps Scraper (1-Click Local Search):** Target specific locations (e.g. "gyms in Lucknow") and extract addresses, phone numbers, ratings, and websites.
-2. **5-Layer Email Finder (Cheerio + Puppeteer Stealth):** Finds valid, syntax-checked emails by scraping websites. Features an automated Puppeteer fallback for dynamic SPA platforms.
-3. **WhatsApp Active Verification Badge:** Verifies WhatsApp capability directly from the CRM panel, appending status metadata to leads.
-4. **Interactive Lead Editor:** Allows manual override and editing of any lead data, keeping Supabase synced in real-time.
-5. **SMTP Dynamic Outreach Sequences:** Fires automated 4-stage Hormozi sequences with live timezone scheduling.
+1. **B2B Apollo Search Engine:** Connects directly to Apollo.io API to fetch high-converting B2B contacts, verified emails, decision-maker job titles, and LinkedIn URLs instantly by niche, location, and seniority.
+2. **Social Search Prospector:** Automates search engine scrapes targeting profile directories on LinkedIn and Instagram using niche keywords and locations.
+3. **Google Maps Scraper (1-Click Local Search):** Target specific locations (e.g. "gyms in Lucknow") and extract addresses, phone numbers, ratings, and websites.
+4. **5-Layer Email Finder (Cheerio + Puppeteer Stealth):** Finds valid, syntax-checked emails by scraping websites. Features an automated Puppeteer fallback for dynamic SPA platforms with same-domain subpage routing.
+5. **DNS/MX Fail-safe Verification:** Fallbacks gracefully to regex/syntax verification if network firewalls block SMTP socket queries, ensuring zero false-negative lead loss.
+6. **WhatsApp Active Verification Badge:** Verifies WhatsApp capability directly from the CRM panel, appending status metadata to leads.
+7. **Interactive Lead Editor:** Allows manual override and editing of any lead data, keeping Supabase synced in real-time.
+8. **SMTP Dynamic Outreach Sequences:** Fires automated 4-stage Hormozi sequences with live timezone scheduling.
 

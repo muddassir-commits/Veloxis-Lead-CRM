@@ -18,6 +18,11 @@ const generator = {
       socialForm.addEventListener('submit', (e) => this.handleSocialScrapeSubmit(e));
     }
 
+    const apolloForm = document.getElementById('apollo-scraper-form');
+    if (apolloForm) {
+      apolloForm.addEventListener('submit', (e) => this.handleApolloScrapeSubmit(e));
+    }
+
     // Bind Select All Checkbox
     const selectAllCheck = document.getElementById('scrape-select-all');
     if (selectAllCheck) {
@@ -38,23 +43,41 @@ const generator = {
     this.activeSource = source;
     const btnMaps = document.getElementById('tab-btn-maps');
     const btnSocial = document.getElementById('tab-btn-social');
+    const btnApollo = document.getElementById('tab-btn-apollo');
     const cardMaps = document.getElementById('card-maps-form');
     const cardSocial = document.getElementById('card-social-form');
+    const cardApollo = document.getElementById('card-apollo-form');
     
+    // Reset all buttons to secondary
+    btnMaps.className = 'btn btn-secondary';
+    btnMaps.style.background = 'none';
+    btnSocial.className = 'btn btn-secondary';
+    btnSocial.style.background = 'none';
+    if (btnApollo) {
+      btnApollo.className = 'btn btn-secondary';
+      btnApollo.style.background = 'none';
+    }
+
+    // Hide all forms
+    cardMaps.style.display = 'none';
+    cardSocial.style.display = 'none';
+    if (cardApollo) cardApollo.style.display = 'none';
+
+    // Show selected
     if (source === 'maps') {
       btnMaps.className = 'btn btn-primary';
       btnMaps.style.background = '';
-      btnSocial.className = 'btn btn-secondary';
-      btnSocial.style.background = 'none';
       cardMaps.style.display = 'block';
-      cardSocial.style.display = 'none';
-    } else {
-      btnMaps.className = 'btn btn-secondary';
-      btnMaps.style.background = 'none';
+    } else if (source === 'social') {
       btnSocial.className = 'btn btn-primary';
       btnSocial.style.background = '';
-      cardMaps.style.display = 'none';
       cardSocial.style.display = 'block';
+    } else if (source === 'apollo') {
+      if (btnApollo) {
+        btnApollo.className = 'btn btn-primary';
+        btnApollo.style.background = '';
+      }
+      if (cardApollo) cardApollo.style.display = 'block';
     }
   },
 
@@ -118,6 +141,38 @@ const generator = {
     }
   },
 
+  async handleApolloScrapeSubmit(e) {
+    e.preventDefault();
+    const keywords = document.getElementById('apollo-keywords').value.trim();
+    const titles = document.getElementById('apollo-titles').value.trim();
+    const locations = document.getElementById('apollo-regions').value.trim();
+    const limit = parseInt(document.getElementById('apollo-limit').value);
+
+    if (!keywords && !titles && !locations) {
+      app.showToast('error', 'Please provide at least one search parameter (Keywords, Job Titles, or Location).');
+      return;
+    }
+
+    // Show Loading
+    document.getElementById('scraper-loading').style.display = 'flex';
+    document.getElementById('scraper-results-card').style.display = 'none';
+    
+    const loadingText = document.getElementById('scraper-loading-text');
+    loadingText.textContent = `Searching Apollo.io API for B2B profiles matching "${keywords || titles || locations}"...`;
+
+    try {
+      const response = await api.searchApollo(keywords, titles, locations, limit);
+      this.scrapedLeads = response.results || [];
+      
+      this.renderScrapeResults();
+      app.showToast('success', `Found ${this.scrapedLeads.length} B2B prospects successfully.`);
+    } catch (err) {
+      app.showToast('error', `Apollo B2B search failed: ${err.message}`);
+    } finally {
+      document.getElementById('scraper-loading').style.display = 'none';
+    }
+  },
+
   renderScrapeResults() {
     const resultsCard = document.getElementById('scraper-results-card');
     const tbody = document.getElementById('scraper-results-body');
@@ -132,17 +187,115 @@ const generator = {
       return;
     }
 
+    // Dynamically adjust headers based on active source
+    const headersTr = document.getElementById('scraper-results-headers');
+    if (headersTr) {
+      if (this.activeSource === 'apollo') {
+        headersTr.innerHTML = `
+          <th width="40"><input type="checkbox" id="scrape-select-all" checked></th>
+          <th>Full Name</th>
+          <th>Company</th>
+          <th>Website</th>
+          <th>Email / Phone</th>
+          <th>Location</th>
+          <th>Title / Industry</th>
+        `;
+      } else if (this.activeSource === 'social') {
+        headersTr.innerHTML = `
+          <th width="40"><input type="checkbox" id="scrape-select-all" checked></th>
+          <th>Profile Name</th>
+          <th>Platform Link</th>
+          <th>Social Details</th>
+          <th>Location</th>
+          <th>Niche Keywords</th>
+        `;
+      } else {
+        headersTr.innerHTML = `
+          <th width="40"><input type="checkbox" id="scrape-select-all" checked></th>
+          <th>Business Name</th>
+          <th>Website</th>
+          <th>Phone</th>
+          <th>Rating</th>
+          <th>Location</th>
+          <th>Industry</th>
+        `;
+      }
+
+      // Re-bind the Select All checkbox because we replaced the HTML
+      const selectAllCheck = document.getElementById('scrape-select-all');
+      if (selectAllCheck) {
+        selectAllCheck.addEventListener('change', (e) => {
+          const checks = document.querySelectorAll('.scrape-item-check');
+          checks.forEach(c => c.checked = e.target.checked);
+        });
+      }
+    }
+
     this.scrapedLeads.forEach((lead, index) => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><input type="checkbox" class="scrape-item-check" data-index="${index}" checked></td>
-        <td style="font-weight: 600;">${lead.name}</td>
-        <td>${lead.website ? `<a href="${lead.website}" target="_blank" style="color:var(--cyan);text-decoration:none;"><i data-lucide="link-2" style="width:14px;height:14px;vertical-align:middle;"></i> ${lead.website.replace(/^https?:\/\/(www\.)?/, '').slice(0, 25)}...</a>` : '<span style="color:var(--text-muted);">None</span>'}</td>
-        <td>${lead.phone || '<span style="color:var(--text-muted);">None</span>'}</td>
-        <td><span style="color:var(--warning);font-weight:600;"><i data-lucide="star" style="width:12px;height:12px;fill:var(--warning);display:inline-block;vertical-align:middle;margin-right:2px;"></i> ${lead.rating || '4.0'}</span></td>
-        <td>${lead.city}, ${lead.country}</td>
-        <td><span class="badge badge-new" style="font-size:10px;">${lead.industry}</span></td>
-      `;
+      
+      if (this.activeSource === 'apollo') {
+        let contactInfo = '';
+        if (lead.email) {
+          contactInfo += `<div><i data-lucide="mail" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> ${lead.email}</div>`;
+        }
+        if (lead.phone) {
+          contactInfo += `<div><i data-lucide="phone" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:4px;"></i> ${lead.phone}</div>`;
+        }
+        if (!contactInfo) {
+          contactInfo = '<span style="color:var(--text-muted);">None</span>';
+        }
+
+        let websiteLink = lead.website ? 
+          `<a href="${lead.website}" target="_blank" style="color:var(--cyan);text-decoration:none;"><i data-lucide="link-2" style="width:14px;height:14px;vertical-align:middle;"></i> ${lead.website.replace(/^https?:\/\/(www\.)?/, '').slice(0, 25)}...</a>` : 
+          '<span style="color:var(--text-muted);">None</span>';
+
+        if (lead.linkedin) {
+          websiteLink += ` <a href="${lead.linkedin}" target="_blank" style="color:#0077b5;text-decoration:none;margin-left:8px;" title="LinkedIn Profile"><i data-lucide="linkedin" style="width:14px;height:14px;vertical-align:middle;"></i></a>`;
+        }
+
+        tr.innerHTML = `
+          <td><input type="checkbox" class="scrape-item-check" data-index="${index}" checked></td>
+          <td style="font-weight: 600;">${lead.name}</td>
+          <td>${lead.company}</td>
+          <td>${websiteLink}</td>
+          <td>${contactInfo}</td>
+          <td>${lead.city}, ${lead.country}</td>
+          <td><span class="badge badge-new" style="font-size:10px;">${lead.industry}</span></td>
+        `;
+      } else if (this.activeSource === 'social') {
+        let platformLink = lead.website ? 
+          `<a href="${lead.website}" target="_blank" style="color:var(--cyan);text-decoration:none;"><i data-lucide="link-2" style="width:14px;height:14px;vertical-align:middle;"></i> Profile Link</a>` : 
+          '<span style="color:var(--text-muted);">None</span>';
+
+        let socialDetails = '';
+        if (lead.instagram) {
+          socialDetails = `<span style="color:#e1306c;"><i data-lucide="instagram" style="width:12px;height:12px;vertical-align:middle;margin-right:4px;"></i>@${lead.instagram}</span>`;
+        } else if (lead.linkedin) {
+          socialDetails = `<span style="color:#0077b5;"><i data-lucide="linkedin" style="width:12px;height:12px;vertical-align:middle;margin-right:4px;"></i>LinkedIn</span>`;
+        } else {
+          socialDetails = '<span style="color:var(--text-muted);">N/A</span>';
+        }
+
+        tr.innerHTML = `
+          <td><input type="checkbox" class="scrape-item-check" data-index="${index}" checked></td>
+          <td style="font-weight: 600;">${lead.name}</td>
+          <td>${platformLink}</td>
+          <td>${socialDetails}</td>
+          <td>${lead.city}, ${lead.country}</td>
+          <td><span class="badge badge-new" style="font-size:10px;">${lead.industry}</span></td>
+        `;
+      } else {
+        tr.innerHTML = `
+          <td><input type="checkbox" class="scrape-item-check" data-index="${index}" checked></td>
+          <td style="font-weight: 600;">${lead.name}</td>
+          <td>${lead.website ? `<a href="${lead.website}" target="_blank" style="color:var(--cyan);text-decoration:none;"><i data-lucide="link-2" style="width:14px;height:14px;vertical-align:middle;"></i> ${lead.website.replace(/^https?:\/\/(www\.)?/, '').slice(0, 25)}...</a>` : '<span style="color:var(--text-muted);">None</span>'}</td>
+          <td>${lead.phone || '<span style="color:var(--text-muted);">None</span>'}</td>
+          <td><span style="color:var(--warning);font-weight:600;"><i data-lucide="star" style="width:12px;height:12px;fill:var(--warning);display:inline-block;vertical-align:middle;margin-right:2px;"></i> ${lead.rating || '4.0'}</span></td>
+          <td>${lead.city}, ${lead.country}</td>
+          <td><span class="badge badge-new" style="font-size:10px;">${lead.industry}</span></td>
+        `;
+      }
       tbody.appendChild(tr);
     });
 
@@ -163,18 +316,30 @@ const generator = {
       const idx = parseInt(box.getAttribute('data-index'));
       const sl = this.scrapedLeads[idx];
       
+      let importNotes = '';
+      if (this.activeSource === 'apollo') {
+        importNotes = sl.notes || `Imported via Apollo B2B Search on ${new Date().toLocaleDateString()}.`;
+      } else if (this.activeSource === 'social') {
+        importNotes = sl.notes || `Imported via Social Prospector on ${new Date().toLocaleDateString()}.`;
+      } else {
+        importNotes = `Imported via Google Maps Scraper on ${new Date().toLocaleDateString()}. rating: ${sl.rating || 'N/A'}`;
+      }
+
       leadsToImport.push({
         name: sl.name,
-        company: sl.name,
+        company: sl.company || sl.name,
         website: sl.website || null,
         phone: sl.phone || null,
-        rating: sl.rating || 4.0,
+        email: sl.email || null,
+        linkedin: sl.linkedin || null,
+        instagram: sl.instagram || null,
+        rating: sl.rating || null,
         city: sl.city || 'Unknown',
         country: sl.country || 'India',
         industry: sl.industry || 'Unknown',
-        status: 'New',
-        lead_score: 'Cold',
-        notes: `Imported via Google Maps Scraper on ${new Date().toLocaleDateString()}. rating: ${sl.rating || 'N/A'}`
+        status: sl.status || (sl.email ? 'Researched' : 'New'),
+        lead_score: sl.lead_score || 'Cold',
+        notes: importNotes
       });
     });
 

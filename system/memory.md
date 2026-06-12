@@ -81,3 +81,11 @@ To ensure `muddassir@veloxisglobal.com` stays out of the spam box, follow this s
 * **Problem:** Direct server-side account validation is restricted by Meta's API without active user session cookies.
 * **Solution:** Implemented a CRM side-panel trigger. Clicking the WhatsApp button opens `https://wa.me/<number>` in a new tab and prompts a browser confirm modal. Upon user confirmation, it automatically logs `[WhatsApp: Active]` (or `Inactive`) in the lead notes, updating a styled badge in the CRM dashboard dynamically.
 
+### 4. Apollo B2B Search & Social SERP Integration
+* **Problem:** Google Maps scraping fails to capture contact emails, job titles, and LinkedIn profiles for decision-makers.
+* **Solution:** Integrated Apollo.io's `mixed_people/search` endpoint alongside a DuckDuckGo social SERP directory scraper. Structured front-end toggles inside the Lead Generator screen and unified the bulk import pipeline to map B2B attributes (LinkedIn, Email, Company Name, and job titles) directly to Supabase CRM tables.
+
+### 5. Local DNS MX Resolution Failure Fallback
+* **Problem:** SMTP connection queries fail with `queryMx ECONNREFUSED` or `ETIMEOUT` on local development environments behind restrictive network firewalls, leading to valid emails being dropped.
+* **Solution:** Configured the backend verification service to handle DNS network anomalies gracefully, falling back to syntax-based verification to preserve valid leads on local runs.
+

@@ -3,6 +3,7 @@ const router = express.Router();
 const scraperService = require('../services/scraperService');
 const emailFinderService = require('../services/emailFinderService');
 const supabase = require('../services/supabaseService');
+const apolloService = require('../services/apolloService');
 
 // 1. POST - Google Maps Scraping
 router.post('/maps', async (req, res) => {
@@ -131,6 +132,32 @@ router.post('/social', async (req, res) => {
     }
 
     const scrapedData = await scraperService.scrapeSocialProfiles(platform, niche, city, maxResults);
+    
+    res.json({ 
+      success: true, 
+      count: scrapedData.length, 
+      results: scrapedData 
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 5. POST - Apollo B2B Profile Search
+router.post('/apollo', async (req, res) => {
+  try {
+    const { keywords, titles, locations, maxResults = 10 } = req.body;
+    
+    if (!keywords && !titles && !locations) {
+      return res.status(400).json({ success: false, error: 'At least one search parameter (keywords, titles, or locations) is required' });
+    }
+
+    const scrapedData = await apolloService.searchB2BProfiles({
+      keywords,
+      titles,
+      locations,
+      limit: maxResults
+    });
     
     res.json({ 
       success: true, 

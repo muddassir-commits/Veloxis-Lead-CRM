@@ -193,6 +193,7 @@
         <div style="display: flex; gap: 8px; margin-bottom: 16px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 6px; border: 1px solid var(--border-color); width: fit-content;">
           <button id="tab-btn-maps" class="btn btn-primary" onclick="generator.setSource('maps')" style="padding: 6px 14px; font-size: 12px; border: none; height: 32px;">🗺️ Google Maps Search</button>
           <button id="tab-btn-social" class="btn btn-secondary" onclick="generator.setSource('social')" style="padding: 6px 14px; font-size: 12px; border: none; height: 32px; background: none;">🔗 Social Search Prospector</button>
+          <button id="tab-btn-apollo" class="btn btn-secondary" onclick="generator.setSource('apollo')" style="padding: 6px 14px; font-size: 12px; border: none; height: 32px; background: none;">⚡ B2B Apollo Search</button>
         </div>
 
         <!-- Card 1: Maps Form -->
@@ -256,6 +257,38 @@
             <button type="submit" class="btn btn-primary" style="height: 42px;"><i data-lucide="search"></i> Find Profiles</button>
           </form>
         </div>
+
+        <!-- Card 3: B2B Apollo Search Form -->
+        <div class="card" id="card-apollo-form" style="display: none;">
+          <form id="apollo-scraper-form" onsubmit="generator.handleApolloScrapeSubmit(event)" style="display: grid; grid-template-columns: 1.5fr 1.5fr 1.5fr 1fr auto; gap: 15px; align-items: flex-end; margin-bottom: 0;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="apollo-keywords">Niche Keywords</label>
+              <input type="text" id="apollo-keywords" class="form-control" placeholder="e.g. fitness, real estate, SaaS">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="apollo-titles">Job Titles</label>
+              <input type="text" id="apollo-titles" class="form-control" placeholder="e.g. CEO, Founder, Marketing Director">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="apollo-regions">Location / City</label>
+              <input type="text" id="apollo-regions" class="form-control" placeholder="e.g. Sydney, Lucknow, London">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="apollo-limit">Max Results</label>
+              <select id="apollo-limit" class="form-control">
+                <option value="5">5 leads</option>
+                <option value="10" selected>10 leads</option>
+                <option value="20">20 leads</option>
+                <option value="50">50 leads</option>
+              </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="height: 42px;"><i data-lucide="zap"></i> Find Contacts</button>
+          </form>
+        </div>
         
         <!-- Scraper Progress / Loader -->
         <div id="scraper-loading" class="card" style="display: none; justify-content: center; align-items: center; padding: 40px;">
@@ -276,7 +309,7 @@
           <div class="table-responsive">
             <table class="custom-table" id="scraper-results-table">
               <thead>
-                <tr>
+                <tr id="scraper-results-headers">
                   <th width="40"><input type="checkbox" id="scrape-select-all" checked></th>
                   <th>Business Name</th>
                   <th>Website</th>

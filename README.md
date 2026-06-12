@@ -8,11 +8,13 @@ A premium, ROI-focused CRM and automated outreach dashboard built for **Muddassi
 
 1. **☁️ Cloud-Native Auto Outreach:** Runs 24/7 in the cloud (Render) even when your laptop is turned OFF.
 2. **📧 Direct Hostinger SMTP Integration:** Sends professional outreach emails directly from `muddassir@veloxisglobal.com` (completely bypassing complex Google Cloud OAuth setups).
-3. **🔍 1-Click Maps Scraper:** Scrapes local directories directly via Puppeteer, extracting names, categories, ratings, and websites.
-4. **🕵️ 5-Layer Email Finder (Cheerio + Puppeteer Fallback):** Scrapes websites with Cheerio and automatically falls back to headless Chrome (Puppeteer Stealth) to bypass Cloudflare and scrape dynamic Single Page Application (SPA) platforms.
-5. **⏰ Timezone-Aware Scheduler:** Automatically schedules email sequences to land in your prospect's inbox at their optimal local morning hours (EST/PST/GMT/AEST).
-6. **👥 Drag-and-Drop Kanban CRM & Data Editor:** Manage pipelines interactively. Edit fields (phone, email, socials, region) via inline modals, updating the database in real-time.
-7. **🟢 WhatsApp Availability Checker:** Click-to-chat verification button links directly to WhatsApp Web. Log active/inactive status and render interactive badges in the CRM instantly.
+3. **⚡ B2B Apollo Search Engine:** Connects to the Apollo.io API to query, filter, and extract targeted B2B contact lists (verified emails, job titles, companies, LinkedIn profiles) directly into the CRM.
+4. **🔗 Social Search Prospector:** DuckDuckGo SERPs scraper to locate Instagram and LinkedIn decision-maker profiles using target niches.
+5. **🔍 1-Click Maps Scraper:** Scrapes local business directories via Puppeteer, capturing metadata like ratings, phone numbers, and websites.
+6. **🕵️ 5-Layer Email Finder (Cheerio + Puppeteer Fallback):** Crawls domains safely (restricted to host domain) with Cheerio, falling back to Puppeteer Stealth for dynamic SPAs to capture hidden emails.
+7. **🔒 DNS/MX verification Fail-safe:** Fallbacks to syntax validation if firewalls block SMTP socket verification queries locally.
+8. **👥 Drag-and-Drop Kanban CRM & Data Editor:** Manage pipelines interactively. Edit fields (phone, email, socials, region) via inline modals, updating the database in real-time.
+9. **🟢 WhatsApp Availability Checker:** Click-to-chat verification button links directly to WhatsApp Web. Log active/inactive status and render interactive badges in the CRM instantly.
 8. **📊 Analytics & SVG Charts:** Direct tracking of open rates and send counts using custom lightweight SVG charts (no heavy libraries).
 9. **🎨 Premium Dark Glassmorphism UI:** Outfit & Inter fonts, blur panels, clean accents, and micro-interactions.
 
