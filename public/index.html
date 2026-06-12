@@ -513,6 +513,12 @@
               <input type="text" id="sent-search" class="form-control" placeholder="Search sent emails..."
                 oninput="sentMail.filterEmails()">
             </div>
+            
+            <div class="toggle-tabs" style="display: flex; gap: 5px; background: rgba(0,0,0,0.15); padding: 4px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); width: 100%; margin-bottom: 2px;">
+              <button type="button" id="sent-filter-all" class="toggle-tab-btn active" onclick="sentMail.setStatusFilter('all')" style="flex:1; border: none; padding: 4px 10px; font-size: 11px; height: 26px; font-weight: 600; text-transform:uppercase; letter-spacing:0.02em;">All</button>
+              <button type="button" id="sent-filter-opened" class="toggle-tab-btn" onclick="sentMail.setStatusFilter('opened')" style="flex:1; border: none; padding: 4px 10px; font-size: 11px; height: 26px; font-weight: 600; text-transform:uppercase; letter-spacing:0.02em; background: none;">Opened</button>
+              <button type="button" id="sent-filter-unopened" class="toggle-tab-btn" onclick="sentMail.setStatusFilter('unopened')" style="flex:1; border: none; padding: 4px 10px; font-size: 11px; height: 26px; font-weight: 600; text-transform:uppercase; letter-spacing:0.02em; background: none;">Unopened</button>
+            </div>
 
             <div style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"
               id="sent-email-list">

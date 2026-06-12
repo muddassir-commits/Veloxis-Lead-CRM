@@ -178,7 +178,7 @@ router.get('/sent', async (req, res) => {
     // Fetch tracking info for all sent emails to get opens
     const { data: tracking, error: trackError } = await supabase
       .from('email_tracking')
-      .select('email_id, opens, last_opened_at');
+      .select('email_id, opens, last_opened_at, ip_addresses, user_agents');
 
     if (trackError) throw trackError;
 
@@ -227,6 +227,8 @@ router.get('/sent', async (req, res) => {
         email_id: h.email_id,
         opens: track.opens,
         last_opened_at: track.last_opened_at,
+        ip_addresses: track.ip_addresses || [],
+        user_agents: track.user_agents || [],
         lead: {
           id: lead.id,
           name: lead.name,
@@ -248,6 +250,138 @@ router.get('/sent', async (req, res) => {
     });
 
     res.json({ success: true, sentEmails });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 10. DELETE - Delete a sent email log (sequence history)
+router.delete('/history/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // First fetch the record to get the email_id (tracker ID)
+    const { data: history, error: fetchErr } = await supabase
+      .from('sequence_history')
+      .select('email_id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (fetchErr) throw fetchErr;
+
+    if (history) {
+      // Delete tracking record first
+      await supabase
+        .from('email_tracking')
+        .delete()
+        .eq('email_id', history.email_id);
+      
+      // Delete history record
+      const { error: deleteErr } = await supabase
+        .from('sequence_history')
+        .delete()
+        .eq('id', id);
+
+      if (deleteErr) throw deleteErr;
+    }
+
+    res.json({ success: true, message: 'Sent email log deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 11. POST - Resend a sent email
+router.post('/history/:id/resend', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Fetch the history record along with lead details and template content
+    const { data: history, error: fetchErr } = await supabase
+      .from('sequence_history')
+      .select(`
+        id, step, email_id, sequence_id, template_id,
+        leads (id, name, company, email, website, country, city, industry),
+        templates (id, subject, body)
+      `)
+      .eq('id', id)
+      .maybeSingle();
+
+    if (fetchErr || !history) {
+      return res.status(404).json({ success: false, error: fetchErr?.message || 'Sent email log not found' });
+    }
+
+    const lead = history.leads;
+    const template = history.templates;
+
+    if (!lead || !lead.email) {
+      return res.status(400).json({ success: false, error: 'Lead email address is missing' });
+    }
+
+    if (!template) {
+      return res.status(400).json({ success: false, error: 'Outreach template no longer exists' });
+    }
+
+    // Fetch daily signature
+    const { data: sigSettings } = await supabase.from('settings').select('value').eq('key', 'email_signature').maybeSingle();
+    const emailSig = sigSettings?.value?.signature || '';
+
+    const nameHelper = require('../utils/nameHelper');
+    const templateEngine = require('../utils/templateEngine');
+
+    // Compile variables
+    const greetingName = nameHelper.getCleanGreetingName(lead.name, lead.company);
+    const companyShort = nameHelper.getCleanCompanyName(lead.company || lead.name);
+
+    const dataContext = {
+      name: greetingName,
+      greeting_name: greetingName,
+      company: lead.company || 'your business',
+      company_short: companyShort,
+      website: lead.website || '',
+      industry: lead.industry || 'your sector',
+      city: lead.city || 'your city',
+      signature: emailSig
+    };
+
+    const compiledSubject = templateEngine.compileTemplate(template.subject, dataContext);
+    const compiledBody = templateEngine.compileTemplate(template.body, dataContext);
+    const htmlContent = compiledBody.replace(/\\n/g, '\n').replace(/\n/g, '<br/>');
+
+    // Generate new tracker ID
+    const { v4: uuidv4 } = require('uuid');
+    const newTrackerId = uuidv4();
+
+    // Send email via Nodemailer
+    const sendResult = await emailService.sendMail({
+      to: lead.email,
+      subject: compiledSubject,
+      html: `<html><body>${htmlContent}</body></html>`,
+      trackerId: newTrackerId
+    });
+
+    if (!sendResult.success) {
+      return res.status(500).json({ success: false, error: sendResult.error });
+    }
+
+    // Create sequence history for the resent email
+    await supabase.from('sequence_history').insert({
+      sequence_id: history.sequence_id,
+      lead_id: lead.id,
+      step: history.step,
+      template_id: template.id,
+      email_id: newTrackerId,
+      status: 'Sent'
+    });
+
+    // Create empty email tracking record
+    await supabase.from('email_tracking').insert({
+      lead_id: lead.id,
+      email_id: newTrackerId,
+      opens: 0
+    });
+
+    res.json({ success: true, message: 'Email resent successfully', newEmailId: newTrackerId });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

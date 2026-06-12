@@ -69,6 +69,14 @@ const api = {
     return this.request('/api/email/sent');
   },
 
+  async deleteSentEmail(id) {
+    return this.request(`/api/email/history/${id}`, 'DELETE');
+  },
+
+  async resendSentEmail(id) {
+    return this.request(`/api/email/history/${id}/resend`, 'POST');
+  },
+
   async sendManualEmail(to, subject, body) {
     return this.request('/api/email/send', 'POST', { to, subject, body });
   },
