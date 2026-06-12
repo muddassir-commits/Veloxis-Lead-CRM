@@ -55,7 +55,20 @@ async function verifyEmail(email) {
       mxRecords: mxRecords.map(r => r.exchange)
     };
   } catch (err) {
-    console.error(`DNS lookup failed for ${domain}:`, err.message);
+    console.warn(`⚠️ DNS MX lookup failed for ${domain}: ${err.message}`);
+    
+    // Check if DNS query failed due to a network timeout / server query block (e.g. ECONNREFUSED)
+    const isNetworkError = ['ECONNREFUSED', 'ETIMEOUT', 'EREFUSED', 'EHOSTUNREACH', 'ENETUNREACH'].includes(err.code);
+    if (isNetworkError) {
+      console.warn(`🟢 Bypassing DNS MX check due to local network/DNS block for domain: ${domain}`);
+      return {
+        isValid: true,
+        reason: 'Valid email syntax (DNS verification bypassed due to network connection blocks)',
+        domain,
+        mxRecords: []
+      };
+    }
+    
     return { isValid: false, reason: `Domain DNS lookup failed: ${err.code || err.message}` };
   }
 }

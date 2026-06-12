@@ -120,11 +120,17 @@ async function scrapeWebsiteWithPuppeteer(websiteUrl) {
         const href = a.href;
         const text = a.textContent.toLowerCase();
         if (href && (text.includes('contact') || text.includes('about') || text.includes('reach') || text.includes('us'))) {
-          // Resolve relative urls
           try {
-            const absolute = new URL(href, baseUrl).href;
-            if (!targets.includes(absolute) && targets.length < 2 && absolute.startsWith('http')) {
-              targets.push(absolute);
+            const baseHost = new URL(baseUrl).hostname.toLowerCase().replace('www.', '');
+            const absoluteUrl = new URL(href, baseUrl);
+            const absoluteHost = absoluteUrl.hostname.toLowerCase().replace('www.', '');
+            
+            // Only follow links belonging to the same root domain
+            if (absoluteHost === baseHost) {
+              const absolute = absoluteUrl.href;
+              if (!targets.includes(absolute) && targets.length < 2 && absolute.startsWith('http')) {
+                targets.push(absolute);
+              }
             }
           } catch (e) {
             // Ignored
@@ -206,18 +212,20 @@ async function scrapeWebsiteForEmails(websiteUrl) {
     const text = $(el).text().toLowerCase();
     
     if (href && (text.includes('contact') || text.includes('about') || text.includes('reach') || text.includes('us'))) {
-      let absoluteUrl = href;
-      if (href.startsWith('/')) {
-        const urlObj = new URL(normalized);
-        absoluteUrl = `${urlObj.origin}${href}`;
-      } else if (!href.startsWith('http')) {
-        // Relative url without slash
-        const urlObj = new URL(normalized);
-        absoluteUrl = `${urlObj.origin}/${href}`;
-      }
-      
-      if (!linksToVisit.includes(absoluteUrl) && linksToVisit.length < 3) {
-        linksToVisit.push(absoluteUrl);
+      try {
+        const baseHost = new URL(normalized).hostname.toLowerCase().replace('www.', '');
+        const hrefUrl = new URL(href, normalized);
+        const hrefHost = hrefUrl.hostname.toLowerCase().replace('www.', '');
+        
+        // Only follow links belonging to the same root domain
+        if (hrefHost === baseHost) {
+          const absoluteUrl = hrefUrl.href;
+          if (!linksToVisit.includes(absoluteUrl) && linksToVisit.length < 3) {
+            linksToVisit.push(absoluteUrl);
+          }
+        }
+      } catch (err) {
+        // Ignore invalid URLs
       }
     }
   });
