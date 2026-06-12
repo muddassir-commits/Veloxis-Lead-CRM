@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
     // 1. Core Leads statistics
     const { data: leads, error: leadErr } = await supabase
       .from('leads')
-      .select('id, status, lead_score, industry, country, created_at');
+      .select('id, status, lead_score, industry, country, created_at, updated_at, notes');
       
     if (leadErr) throw leadErr;
 
@@ -18,11 +18,25 @@ router.get('/', async (req, res) => {
     const leadsByIndustry = {};
     const leadsByCountry = {};
 
+    let linkedinSentToday = 0;
+    let instagramSentToday = 0;
+
     leads.forEach(l => {
       leadsByStatus[l.status] = (leadsByStatus[l.status] || 0) + 1;
       leadsByScore[l.lead_score] = (leadsByScore[l.lead_score] || 0) + 1;
       if (l.industry) leadsByIndustry[l.industry] = (leadsByIndustry[l.industry] || 0) + 1;
       if (l.country) leadsByCountry[l.country] = (leadsByCountry[l.country] || 0) + 1;
+
+      // Count manual outreaches updated today with manual send logs in notes
+      const isUpdatedToday = l.updated_at && (new Date(l.updated_at).toDateString() === new Date().toDateString());
+      if (l.notes && isUpdatedToday) {
+        if (l.notes.toLowerCase().includes('via linkedin')) {
+          linkedinSentToday++;
+        }
+        if (l.notes.toLowerCase().includes('via instagram')) {
+          instagramSentToday++;
+        }
+      }
     });
 
     // 2. Fetch email metrics
@@ -37,6 +51,14 @@ router.get('/', async (req, res) => {
       .select('id, opens, last_opened_at, clicked');
       
     if (trackErr) throw trackErr;
+
+    let emailsSentToday = 0;
+    history.forEach(h => {
+      const isSentToday = h.sent_at && (new Date(h.sent_at).toDateString() === new Date().toDateString());
+      if (isSentToday) {
+        emailsSentToday++;
+      }
+    });
 
     const totalSent = history.length;
     const totalOpens = tracking.reduce((acc, curr) => acc + (curr.opens || 0), 0);
@@ -95,7 +117,10 @@ router.get('/', async (req, res) => {
         clickRate,
         replies: leadsByStatus['Replied'] || 0,
         meetingsBooked: leadsByStatus['Meeting'] || 0,
-        wonClients: leadsByStatus['Won'] || 0
+        wonClients: leadsByStatus['Won'] || 0,
+        emailsSentToday,
+        linkedinSentToday,
+        instagramSentToday
       },
       funnel: {
         new: leadsByStatus['New'] || 0,

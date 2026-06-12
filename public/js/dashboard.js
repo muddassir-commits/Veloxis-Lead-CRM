@@ -41,18 +41,16 @@ const dashboard = {
       const settingsData = await api.getSettings();
       const limits = settingsData.settings?.outreach_limits || { email_daily_limit: 100, linkedin_daily_limit: 10, instagram_daily_limit: 30 };
 
-      // Calculate sent values today (mocking/extracting from actual history or estimating)
-      const emailSentCount = summary.totalSent > limits.email_daily_limit ? limits.email_daily_limit : summary.totalSent; // placeholder or actual count
+      // Calculate sent values today from server analytics summary
+      const emailSentCount = summary.emailsSentToday || 0;
       
       const emailPct = Math.min(Math.round((emailSentCount / limits.email_daily_limit) * 100), 100);
       document.getElementById('progress-email-text').textContent = `${emailSentCount} / ${limits.email_daily_limit} Sent`;
       document.getElementById('progress-email-bar').style.width = `${emailPct}%`;
 
-      // Manual logs (since manual, we query sequence history or mock based on completed check)
-      const plannerData = await api.getPlanner();
-      
-      const linkedinSent = 10 - plannerData.linkedinQueue.length; // Remaining leads in queue represents what was done
-      const instagramSent = 30 - plannerData.instagramQueue.length;
+      // Manual logs (retrieved dynamically from today's database logs via analytics summary)
+      const linkedinSent = summary.linkedinSentToday || 0;
+      const instagramSent = summary.instagramSentToday || 0;
 
       const linkedinPct = Math.min(Math.round((linkedinSent / limits.linkedin_daily_limit) * 100), 100);
       document.getElementById('progress-linkedin-text').textContent = `${linkedinSent} / ${limits.linkedin_daily_limit} Sent`;
