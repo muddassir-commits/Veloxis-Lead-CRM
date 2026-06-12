@@ -9,11 +9,12 @@ A premium, ROI-focused CRM and automated outreach dashboard built for **Muddassi
 1. **☁️ Cloud-Native Auto Outreach:** Runs 24/7 in the cloud (Render) even when your laptop is turned OFF.
 2. **📧 Direct Hostinger SMTP Integration:** Sends professional outreach emails directly from `muddassir@veloxisglobal.com` (completely bypassing complex Google Cloud OAuth setups).
 3. **🔍 1-Click Maps Scraper:** Scrapes local directories directly via Puppeteer, extracting names, categories, ratings, and websites.
-4. **🕵️ 5-Layer Email Finder:** Scrapes websites, extracts social accounts, generates domain patterns, checks DNS MX records, and verifies target authenticity automatically.
+4. **🕵️ 5-Layer Email Finder (Cheerio + Puppeteer Fallback):** Scrapes websites with Cheerio and automatically falls back to headless Chrome (Puppeteer Stealth) to bypass Cloudflare and scrape dynamic Single Page Application (SPA) platforms.
 5. **⏰ Timezone-Aware Scheduler:** Automatically schedules email sequences to land in your prospect's inbox at their optimal local morning hours (EST/PST/GMT/AEST).
-6. **👥 Drag-and-Drop Kanban CRM:** Manage lead status pipelines interactively. Open slide-out detail panels to track individual history.
-7. **📊 Analytics & SVG Charts:** Direct tracking of open rates and send counts using custom lightweight SVG charts (no heavy libraries).
-8. **🎨 Premium Dark Glassmorphism UI:** Outfit & Inter fonts, blur panels, clean accents, and micro-interactions.
+6. **👥 Drag-and-Drop Kanban CRM & Data Editor:** Manage pipelines interactively. Edit fields (phone, email, socials, region) via inline modals, updating the database in real-time.
+7. **🟢 WhatsApp Availability Checker:** Click-to-chat verification button links directly to WhatsApp Web. Log active/inactive status and render interactive badges in the CRM instantly.
+8. **📊 Analytics & SVG Charts:** Direct tracking of open rates and send counts using custom lightweight SVG charts (no heavy libraries).
+9. **🎨 Premium Dark Glassmorphism UI:** Outfit & Inter fonts, blur panels, clean accents, and micro-interactions.
 
 ---
 

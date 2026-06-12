@@ -57,3 +57,21 @@ This document details the writing voice, structure rules, and forbidden phrases 
   - "Dear Owner"
   - "Please follow our page"
   - Long paragraphs of copy-pasted text (keeps messages looking like real personal DMs, not bots).
+
+---
+
+## 🟢 WhatsApp Agent
+
+- **Core Goal:** Fast, interactive outreach verification and scheduling. Used to follow up with leads who have the `Active` WhatsApp badge.
+- **Voice Profile:** Semi-formal, direct, helpful, and polite. Keep text under 3 sentences to fit cleanly on mobile screens.
+- **Message Structure:**
+  1. **The Short Intro:** State who you are and reference the email sent.
+     - *Example:* `Hi {{name}}, Muddassir from Veloxis here. I just sent a speed optimization checklist to your email {{email}}...`
+  2. **The Low-Friction Value Ask:** Ask if they want it sent directly on WhatsApp instead.
+     - *Example:* `Did you get a chance to check it, or would you prefer I drop the quick 3-step PDF here for easy reading?`
+  3. **The Active Badge Logging:** When the user clicks the WhatsApp button in the CRM, a verification badge is updated. If the contact is active, this sequence is initiated.
+- **Forbidden Phrases:**
+  - "Please review this link: [link]" (Can trigger WhatsApp spam-block on non-contacts)
+  - "Dear Sir/Madam"
+  - Copy-pasting the entire email content into the chat.
+

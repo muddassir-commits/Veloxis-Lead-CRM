@@ -58,3 +58,18 @@ Launching paid Facebook & Instagram campaigns that deliver a high Return on Ad S
 - Advanced lookalike, interest, and custom audience retargeting.
 - Pixel tracking verify checks and conversion API setup.
 - Weekly metric dashboards detailing ad spend, cost per lead, and revenue attribution.
+
+---
+
+## 🛠️ Proprietary CRM & Prospecting Tech Stack
+
+### Core Focus
+Leverage internal proprietary scraping, verification, and CRM tools to identify, enrich, and close target agency clients.
+
+### Capabilities & Systems:
+1. **Google Maps Scraper (1-Click Local Search):** Target specific locations (e.g. "gyms in Lucknow") and extract addresses, phone numbers, ratings, and websites.
+2. **5-Layer Email Finder (Cheerio + Puppeteer Stealth):** Finds valid, syntax-checked emails by scraping websites. Features an automated Puppeteer fallback for dynamic SPA platforms.
+3. **WhatsApp Active Verification Badge:** Verifies WhatsApp capability directly from the CRM panel, appending status metadata to leads.
+4. **Interactive Lead Editor:** Allows manual override and editing of any lead data, keeping Supabase synced in real-time.
+5. **SMTP Dynamic Outreach Sequences:** Fires automated 4-stage Hormozi sequences with live timezone scheduling.
+

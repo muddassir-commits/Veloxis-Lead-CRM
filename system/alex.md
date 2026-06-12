@@ -49,3 +49,6 @@ When a lead responds, we transition them to our Grand Slam Offer which bundles v
 - [ ] **Value First:** Are we giving them a diagnostic gift (like identifying page load errors) upfront?
 - [ ] **No Calendly links initially:** Did we ask for a simple yes/no reply instead of scheduling a call?
 - [ ] **Risk Reversal CTA:** Is the final call to action low-friction? (e.g. "Can I send the screen recording over? Just reply yes.")
+- [ ] **WhatsApp Availability:** If a phone number is scraped, did we check their WhatsApp status inside the CRM side panel to enable direct mobile channel follow-ups?
+- [ ] **Manual Profile Review:** Did we edit any mismatched scraped details (such as names or categories) using the CRM edit forms to ensure data is clean before starting sequence automation?
+

@@ -10,6 +10,7 @@ This document acts as the dynamic memory core for Veloxis Global campaigns, deta
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **W1** | Gyms / Fitness | Instagram DM | - | - | - | - | React to story → Compliment post → Introduce mobile speed diagnosis. |
 | **W2** | Test prep / Coaching | Cold Email | - | - | - | - | Schedule at 9:30 AM local time. Focus on competitor keyword gaps. |
+| **W3** | Real Estate / Clinics | WhatsApp & Email | - | - | - | - | Scrape maps → Find phone & email → Verify WhatsApp → Direct mobile follow-up. |
 
 ---
 
@@ -63,3 +64,20 @@ To ensure `muddassir@veloxisglobal.com` stays out of the spam box, follow this s
   > Before I go, I want to leave you with some value. Here is the link to our DIY Speed Optimization Checklist that we use for all our e-commerce audits: https://veloxisglobal.com/seo-checklist. You can run it on your site when you get some downtime.
   >
   > Wish you the absolute best of luck this quarter!"
+
+---
+
+## 🛠️ System Development Memory Logs
+
+### 1. Advanced Website Email Scraper (Puppeteer Fallback)
+* **Problem:** Cheerio-based fetch fetches raw HTML and misses dynamic text on Single Page Applications (SPAs) or gets blocked by Cloudflare security gates.
+* **Solution:** Configured `puppeteer-extra` with `puppeteer-extra-plugin-stealth` to emulate genuine user interaction. If Cheerio yields 0 emails, the scraper automatically falls back to headless Chrome, waits for the DOM to settle (`networkidle2`), parses dynamic nodes, and queries secondary contact pages.
+
+### 2. Manual Profile Editing & DB Synchronization
+* **Problem:** AI-scraped names, emails, and phone numbers can contain extra characters, prefixes, or missing local fields that need manual cleanup before triggering automation sequences.
+* **Solution:** Extended the CRM Lead Form Modal with inputs for Phone, LinkedIn, Instagram, City, Country, Industry, and Notes. Configured Express controllers to sanitize inputs, mapping empty strings to `null` database objects to avoid violating unique constraints on Supabase (such as duplicate emails).
+
+### 3. Interactive WhatsApp Availability Verification
+* **Problem:** Direct server-side account validation is restricted by Meta's API without active user session cookies.
+* **Solution:** Implemented a CRM side-panel trigger. Clicking the WhatsApp button opens `https://wa.me/<number>` in a new tab and prompts a browser confirm modal. Upon user confirmation, it automatically logs `[WhatsApp: Active]` (or `Inactive`) in the lead notes, updating a styled badge in the CRM dashboard dynamically.
+

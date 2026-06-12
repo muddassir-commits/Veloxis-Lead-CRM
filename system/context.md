@@ -17,6 +17,7 @@ This document details the background context for Muddassir Ali, CEO & Founder of
 | **Phone Number** | +91-88876 20727 |
 | **LinkedIn Profile** | [linkedin.com/in/muddassir-alii](https://linkedin.com/in/muddassir-alii) |
 | **Instagram Handle** | [@muddassir__ali](https://instagram.com/muddassir__ali) |
+| **WhatsApp Business** | +91-88876 20727 (Linked to CRM check-and-badge system) |
 | **Target Budget** | ₹0 initial setup (using free-tier cloud stacks, upgrading upon client close) |
 
 ---
