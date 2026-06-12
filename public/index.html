@@ -85,10 +85,25 @@
       </div>
     </aside>
 
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebar-backdrop"></div>
+
     <!-- ==========================================
          MAIN CONTENT VIEWPORT
          ========================================== -->
     <main id="main-viewport">
+
+      <!-- Mobile Top Header Bar -->
+      <header id="mobile-header">
+        <button id="mobile-menu-btn" onclick="app.toggleMobileSidebar(true)" aria-label="Toggle Navigation Menu">
+          <i data-lucide="menu"></i>
+        </button>
+        <div class="mobile-logo-text">
+          <img src="assets/logo-dark-icon.png" alt="Veloxis Logo">
+          <h3>Veloxis</h3>
+        </div>
+        <div class="mobile-profile-avatar" onclick="app.showScreen('settings')">MA</div>
+      </header>
 
       <!-- SCREEN 1: COMMAND CENTER -->
       <section id="screen-dashboard" class="screen active">

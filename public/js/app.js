@@ -67,8 +67,28 @@ const app = {
       leads.closeSidePanel();
     }
 
+    // Auto-close mobile sidebar if open
+    this.toggleMobileSidebar(false);
+
     this.currentScreen = screenId;
     this.refreshScreen(screenId);
+  },
+
+  toggleMobileSidebar(force) {
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (!sidebar) return;
+
+    const isOpen = sidebar.classList.contains('mobile-open');
+    const shouldOpen = typeof force === 'boolean' ? force : !isOpen;
+
+    if (shouldOpen) {
+      sidebar.classList.add('mobile-open');
+      if (backdrop) backdrop.classList.add('active');
+    } else {
+      sidebar.classList.remove('mobile-open');
+      if (backdrop) backdrop.classList.remove('active');
+    }
   },
 
   refreshScreen(screenId) {

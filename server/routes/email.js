@@ -171,6 +171,7 @@ router.get('/sent', async (req, res) => {
         leads (id, name, company, email, website, country, city, industry),
         templates (id, name, type, subject, body, principle)
       `)
+      .eq('status', 'Sent')
       .order('sent_at', { ascending: false });
 
     if (error) throw error;

@@ -2,6 +2,7 @@ const cheerio = require('cheerio');
 const emailVerifyService = require('./emailVerifyService');
 const dns = require('dns').promises;
 const browserManager = require('./browserManager');
+const nameHelper = require('../utils/nameHelper');
 
 /**
  * 5-Layer Email Finder Service
@@ -435,28 +436,42 @@ async function findEmailForLead(lead) {
   }
 
   // LAYER 3 & 5: Owner Name Matching Fallback
-  if (lead.name) {
+  if (lead.name && !nameHelper.isLikelyBusiness(lead.name, lead.company)) {
     try {
       const normalized = normalizeUrl(website);
       const urlObj = new URL(normalized);
       const domain = urlObj.hostname.replace('www.', '');
 
       const firstName = lead.name.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-      const nameCandidate = `${firstName}@${domain}`;
+      
+      // Blacklist of generic placeholder first names to avoid guessing false emails (e.g. founder@domain)
+      const genericPlaceholders = new Set([
+        'founder', 'ceo', 'owner', 'manager', 'admin', 'contact', 'info', 
+        'support', 'sales', 'office', 'enquiries', 'inquiry', 'team', 'director', 
+        'partner', 'head', 'hello', 'staff', 'careers', 'jobs', 'service', 
+        'reception', 'accounts', 'billing'
+      ]);
 
-      const cleaned = emailVerifyService.cleanEmailAddress(nameCandidate);
-      if (cleaned) {
-        const verify = await emailVerifyService.verifyEmail(cleaned);
-        if (verify.isValid) {
-          console.log(`✅ Valid Email Found via Name Matching: ${cleaned}`);
-          result.email = cleaned;
-          result.notes += `\n[Email Finder] Generated valid name candidate email: ${cleaned}`;
-          return result;
+      if (!genericPlaceholders.has(firstName)) {
+        const nameCandidate = `${firstName}@${domain}`;
+        const cleaned = emailVerifyService.cleanEmailAddress(nameCandidate);
+        if (cleaned) {
+          const verify = await emailVerifyService.verifyEmail(cleaned);
+          if (verify.isValid) {
+            console.log(`✅ Valid Email Found via Name Matching: ${cleaned}`);
+            result.email = cleaned;
+            result.notes += `\n[Email Finder] Generated valid name candidate email: ${cleaned}`;
+            return result;
+          }
         }
+      } else {
+        console.log(`⚠️ Skipping name-based candidate generation for generic name placeholder: "${lead.name}"`);
       }
     } catch (err) {
       // Ignored
     }
+  } else if (lead.name) {
+    console.log(`⚠️ Skipping name-based candidate generation because name is classified as a business: "${lead.name}"`);
   }
 
   result.notes += '\n[Email Finder] 5-layer search completed. No active email could be identified.';

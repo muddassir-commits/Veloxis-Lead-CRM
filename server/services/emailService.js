@@ -61,7 +61,7 @@ async function sendMail({ to, subject, text, html, trackerId }) {
       ? (isDefaultRenderUrl ? `http://localhost:${process.env.PORT || 5000}` : (process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`))
       : (process.env.BACKEND_URL || 'https://veloxis-outreach-api.onrender.com');
     
-    const trackingPixelUrl = `${backendUrl}/track/${trackerId}`;
+    const trackingPixelUrl = `${backendUrl}/track/${trackerId}.gif`;
     
     // Embed tracking pixel before the closing body tag or at the end
     if (finalHtml.includes('</body>')) {

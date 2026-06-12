@@ -1264,3 +1264,240 @@ textarea.form-control {
   padding: 40px;
   color: var(--text-secondary);
 }
+
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVENESS (MEDIA QUERIES)
+   ========================================================================== */
+
+/* Styles for Mobile Header (hidden on desktop) */
+#mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: rgba(12, 14, 26, 0.7);
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 90;
+  width: 100%;
+  position: sticky;
+  top: 0;
+}
+
+#mobile-menu-btn {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+#mobile-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+#mobile-menu-btn i {
+  width: 24px;
+  height: 24px;
+}
+
+.mobile-logo-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-logo-text img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.mobile-logo-text h3 {
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(to right, #ffffff, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.mobile-profile-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--grad-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 11px;
+  color: white;
+  cursor: pointer;
+}
+
+/* Sidebar Backdrop on Mobile */
+#sidebar-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 95;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#sidebar-backdrop.active {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Media Query for Mobile (max-width: 991px) */
+@media (max-width: 991px) {
+  #app-container {
+    flex-direction: column;
+  }
+
+  #sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 280px;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.8);
+  }
+
+  #sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  #mobile-header {
+    display: flex;
+  }
+
+  #main-viewport {
+    height: calc(100vh - 65px); /* Adjust height for mobile header */
+    width: 100vw;
+  }
+
+  .screen {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .screen-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .header-actions .btn {
+    flex-grow: 1;
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .section-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Side Slider Panel */
+  .side-panel {
+    width: 100% !important;
+    max-width: 100vw !important;
+    z-index: 110;
+  }
+
+  /* Templates & Modal Adjustment */
+  .template-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-card {
+    width: 95% !important;
+    margin: 10px;
+  }
+
+  /* Instagram Split Layout responsiveness */
+  #screen-instagram .section-grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+  }
+
+  #screen-instagram .section-grid > div:first-child, 
+  #ig-workspace-card {
+    height: 55vh !important;
+  }
+
+  /* Sent Mail Split Layout responsiveness */
+  #screen-sent-mail .section-grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+  }
+
+  #screen-sent-mail .section-grid > div:first-child, 
+  #sent-email-detail {
+    height: 55vh !important;
+  }
+
+  /* Form elements on filters */
+  #crm-filter-status, #crm-filter-score, #crm-filter-industry, #crm-filter-city, #crm-filter-date {
+    width: 100% !important;
+  }
+}
+
+/* Extra small screens (max-width: 576px) */
+@media (max-width: 576px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .screen-header h1 {
+    font-size: 22px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .custom-table th, .custom-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .toggle-tabs {
+    width: 100%;
+  }
+
+  .toggle-tab-btn {
+    flex: 1;
+    text-align: center;
+  }
+}

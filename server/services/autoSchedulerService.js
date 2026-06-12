@@ -7,11 +7,13 @@ const sequenceService = require('./sequenceService');
 const whatsappService = require('./whatsappService');
 const telegramService = require('./telegramService');
 const emailService = require('./emailService');
+const bounceCheckerService = require('./bounceCheckerService');
 
 // Scheduler tasks
 let dailyScrapeTask = null;
 let dailyOutreachTask = null;
 let dailyReportTask = null;
+let dailyBounceTask = null;
 
 // Track state between cron triggers
 let lastLeadsFoundCount = 0;
@@ -60,6 +62,18 @@ function startAutoScheduler() {
     scheduled: true,
     timezone: 'Asia/Kolkata'
   });
+
+  // 4. Run automated email bounce checks from inbox every 30 minutes
+  dailyBounceTask = cron.schedule('*/30 * * * *', async () => {
+    console.log('📡 [Automation] Running automated IMAP email bounce checks (Every 30 Mins)...');
+    try {
+      await bounceCheckerService.checkBounces();
+    } catch (err) {
+      console.error('❌ Automated bounce checking failed:', err.message);
+    }
+  }, {
+    scheduled: true
+  });
 }
 
 /**
@@ -69,6 +83,7 @@ function stopAutoScheduler() {
   if (dailyScrapeTask) dailyScrapeTask.stop();
   if (dailyOutreachTask) dailyOutreachTask.stop();
   if (dailyReportTask) dailyReportTask.stop();
+  if (dailyBounceTask) dailyBounceTask.stop();
   console.log('⏰ Daily Lead Gen, Outreach, & Report Auto Scheduler stopped.');
 }
 

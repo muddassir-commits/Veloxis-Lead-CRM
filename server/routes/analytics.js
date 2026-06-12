@@ -42,7 +42,8 @@ router.get('/', async (req, res) => {
     // 2. Fetch email metrics
     const { data: history, error: histErr } = await supabase
       .from('sequence_history')
-      .select('id, sent_at, step, lead_id');
+      .select('id, sent_at, step, lead_id')
+      .eq('status', 'Sent');
       
     if (histErr) throw histErr;
 
@@ -93,7 +94,8 @@ router.get('/', async (req, res) => {
       .select(`
         id, step,
         templates (name, type, principle)
-      `);
+      `)
+      .eq('status', 'Sent');
       
     if (tempErr) throw tempErr;
       
