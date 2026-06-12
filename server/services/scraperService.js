@@ -4,6 +4,62 @@ const emailFinderService = require('./emailFinderService');
 const supabase = require('./supabaseService');
 
 /**
+ * Detects if browser is redirected to a Google Consent page and clicks "Accept all" to bypass
+ * @param {Object} page - Puppeteer page instance
+ */
+async function handleGoogleConsent(page) {
+  try {
+    const url = page.url();
+    if (url.includes('consent.google.com') || await page.$('#L2AGLb') !== null) {
+      console.log('🛡️ Google Consent page detected. Attempting to bypass...');
+      
+      // Try L2AGLb first as it's the standard accept button id
+      const acceptBtn = await page.$('#L2AGLb');
+      if (acceptBtn) {
+        await acceptBtn.click();
+        console.log('✅ Clicked consent button (#L2AGLb)');
+      } else {
+        // Fallback: try finding button in consent form
+        const formBtn = await page.$('form[action*="consent"] button, form[action*="save"] button');
+        if (formBtn) {
+          await formBtn.click();
+          console.log('✅ Clicked consent form button');
+        } else {
+          // Fallback: find any button containing common text
+          const buttons = await page.$$('button');
+          let clicked = false;
+          for (const btn of buttons) {
+            const text = await page.evaluate(el => el.textContent, btn);
+            if (text && (
+              text.includes('Accept') || 
+              text.includes('Agree') || 
+              text.includes('akzeptieren') || 
+              text.includes('accepter') ||
+              text.includes('stimm')
+            )) {
+              await btn.click();
+              clicked = true;
+              console.log(`✅ Clicked consent button with text: "${text.trim()}"`);
+              break;
+            }
+          }
+          if (!clicked && buttons.length > 0) {
+            // Click the last button as it is typically the "Accept" or "Save" button in the form
+            await buttons[buttons.length - 1].click();
+            console.log('✅ Clicked last button on consent page as fallback');
+          }
+        }
+      }
+      
+      // Wait for navigation back or some time to settle
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  } catch (consentErr) {
+    console.warn('⚠️ Google Consent bypass warning:', consentErr.message);
+  }
+}
+
+/**
  * Scrapes Google Maps for business listings based on search query
  * @param {string} query - The search query (e.g. "gyms in Lucknow")
  * @param {string} region - Filter region/country
@@ -23,6 +79,9 @@ async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
     const searchUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}+${encodeURIComponent(region)}`;
     console.log(`🌐 Navigating to: ${searchUrl}`);
     await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+    
+    // Handle consent redirection
+    await handleGoogleConsent(page);
     
     // Wait for the results pane to load or timeout
     try {
@@ -79,7 +138,7 @@ async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
           const match = ratingEl.textContent.match(/([0-9.]+)/);
           if (match) rating = parseFloat(match[1]);
         }
-
+ 
         // Extract Industry/Category
         let category = 'Business Services';
         const metaTexts = parent ? Array.from(parent.querySelectorAll('.W4EwHf, .fontBodyMedium')) : [];
@@ -110,6 +169,9 @@ async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
       
       try {
         await page.goto(item.url, { waitUntil: 'networkidle2', timeout: 30000 });
+        
+        // Handle consent redirection
+        await handleGoogleConsent(page);
         
         const details = await page.evaluate(() => {
           // Select buttons with text patterns, aria-labels, or icons

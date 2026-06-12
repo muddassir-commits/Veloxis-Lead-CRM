@@ -94,6 +94,114 @@ const leadGenProgress = {
  * @param {Array<string>} [customRegions] - Custom cities to scan
  * @returns {Promise<number>} - Actual number of leads enqueued
  */
+/**
+ * Maps an industry name to a list of relevant query keywords for Google Maps search
+ * @param {string} industry 
+ * @returns {Array<string>} List of query terms
+ */
+function getSearchQueries(industry) {
+  const ind = (industry || '').toLowerCase();
+  
+  if (ind.includes('home remodeling') || ind.includes('construction') || ind.includes('renovation') || ind.includes('builder')) {
+    return [
+      'home renovations',
+      'home builders',
+      'home remodeling',
+      'builders',
+      'construction companies'
+    ];
+  }
+  if (ind.includes('real estate') || ind.includes('developer')) {
+    return [
+      'real estate developers',
+      'property developer',
+      'luxury real estate agency',
+      'home builders',
+      'property management'
+    ];
+  }
+  if (ind.includes('gym') || ind.includes('fitness')) {
+    return [
+      'gyms',
+      'fitness centers',
+      'crossfit gyms',
+      'personal trainers',
+      'yoga studios'
+    ];
+  }
+  if (ind.includes('dentist') || ind.includes('dental')) {
+    return [
+      'dental clinics',
+      'cosmetic dentist',
+      'dentists',
+      'orthodontist',
+      'dental surgery'
+    ];
+  }
+  if (ind.includes('spa') || ind.includes('medspa') || ind.includes('beauty')) {
+    return [
+      'medspa',
+      'medical spa',
+      'plastic surgeon',
+      'skin clinic',
+      'beauty salon'
+    ];
+  }
+  if (ind.includes('solar')) {
+    return [
+      'solar installers',
+      'solar energy companies',
+      'solar panels',
+      'residential solar',
+      'clean energy contractor'
+    ];
+  }
+  if (ind.includes('roofing') || ind.includes('roofer')) {
+    return [
+      'roofing contractors',
+      'roof repair',
+      'roofers',
+      'local roofing company',
+      'roof installation'
+    ];
+  }
+  if (ind.includes('hvac')) {
+    return [
+      'hvac contractors',
+      'air conditioning repair',
+      'heating contractor',
+      'furnace repair',
+      'plumbing and heating'
+    ];
+  }
+  if (ind.includes('software') || ind.includes('marketing') || ind.includes('agency')) {
+    return [
+      'software development agency',
+      'digital marketing agency',
+      'web design company',
+      'seo agency',
+      'it consulting'
+    ];
+  }
+
+  // Fallback default queries
+  return [
+    `luxury ${industry}`,
+    `best ${industry}`,
+    `top ${industry}`,
+    `${industry} companies`,
+    `${industry} services`
+  ];
+}
+
+/**
+ * Automated pipeline to find verified leads and enqueue them into sequences
+ * @param {number} targetCount - Number of verified leads to find
+ * @param {Array<string>} [customIndustries] - Custom industries to scan
+ * @param {Array<string>} [customRegions] - Custom cities to scan
+ * @param {string} [mode] - Sourcing mode (email or instagram)
+ * @returns {Promise<number>} - Actual number of leads enqueued
+ */
 async function runDailyLeadGeneration(targetCount = 100, customIndustries = null, customRegions = null, mode = 'email') {
   leadGenProgress.running = true;
   leadGenProgress.insertedCount = 0;
@@ -116,6 +224,18 @@ async function runDailyLeadGeneration(targetCount = 100, customIndustries = null
     console.log(`🤖 Daily Lead Gen: targetting ${targetCount} leads. Mode: ${mode}. Verticals: [${industries.join(', ')}] Locations: [${regions.join(', ')}]`);
 
     const processedEmails = new Set();
+    
+    // Load existing emails from database first to prevent duplicate processing
+    try {
+      const { data: existingLeads } = await supabase.from('leads').select('email');
+      if (existingLeads) {
+        existingLeads.forEach(l => {
+          if (l.email) processedEmails.add(l.email.toLowerCase());
+        });
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not load existing database emails for deduping:', err.message);
+    }
 
     for (const industry of industries) {
       if (insertedCount >= targetCount) break;
@@ -156,6 +276,9 @@ async function runDailyLeadGeneration(targetCount = 100, customIndustries = null
               const gaps = await emailFinderService.analyzeWebsiteGaps(searchWebsite);
               const reportText = emailFinderService.generateDeepResearchReport(item.name, industry, searchWebsite, gaps);
 
+              const cleanCity = city.toLowerCase();
+              const country = (cleanCity.includes('auckland') || cleanCity.includes('zealand')) ? 'New Zealand' : 'India';
+
               const leadData = {
                 name: item.name,
                 company: item.company,
@@ -165,7 +288,7 @@ async function runDailyLeadGeneration(targetCount = 100, customIndustries = null
                 linkedin: null,
                 instagram: handle,
                 city: city,
-                country: 'India',
+                country: country,
                 industry: industry,
                 rating: 4.0,
                 status: 'Researched',
@@ -190,6 +313,19 @@ async function runDailyLeadGeneration(targetCount = 100, customIndustries = null
               leadGenProgress.statusText = `[${insertedCount}/${targetCount}] Sourced Instagram profile: @${handle}`;
               console.log(`✅ [${insertedCount}/${targetCount}] Sourced Instagram profile: @${handle}`);
 
+              // Initialize sequence in PAUSED state (idle/paused) so emails are not sent automatically
+              try {
+                await supabase.from('sequences').insert({
+                  lead_id: insertedLead.id,
+                  current_step: 1,
+                  status: 'Paused',
+                  next_sent_at: null
+                });
+                console.log(`🚀 Automated Outreach campaign created in PAUSED state for lead: @${handle}`);
+              } catch (seqErr) {
+                console.error(`⚠️ Failed to create paused sequence for Instagram lead:`, seqErr.message);
+              }
+
               await new Promise(r => setTimeout(r, 1500));
             }
           } catch (err) {
@@ -198,91 +334,125 @@ async function runDailyLeadGeneration(targetCount = 100, customIndustries = null
           continue; // Go to next city/industry
         }
 
-        const query = `luxury ${industry.toLowerCase()}`;
-        console.log(`🔍 Automation Google Maps Search: "${query}" in "${city}"...`);
-        leadGenProgress.currentQuery = query;
-        leadGenProgress.currentCity = city;
-        leadGenProgress.statusText = `Searching Google Maps for "${query}" in "${city}"...`;
+        // Email Sourcing Mode (Google Maps)
+        const queries = getSearchQueries(industry);
 
-        try {
-          const listings = await scraperService.scrapeGoogleMaps(query, city, 40);
-          console.log(`📋 Sourced ${listings.length} listings from Maps.`);
-          leadGenProgress.statusText = `Found ${listings.length} listings from Maps. Starting enrichment...`;
+        for (const query of queries) {
+          if (insertedCount >= targetCount) break;
 
-          for (const item of listings) {
-            if (insertedCount >= targetCount) break;
+          console.log(`🔍 Automation Google Maps Search: "${query}" in "${city}"...`);
+          leadGenProgress.currentQuery = query;
+          leadGenProgress.currentCity = city;
+          leadGenProgress.statusText = `Searching Google Maps for "${query}" in "${city}"...`;
 
-            const website = item.website || null;
-            if (!website) continue; // Requires website for email finding
+          try {
+            const listings = await scraperService.scrapeGoogleMaps(query, city, 40);
+            console.log(`📋 Sourced ${listings.length} listings from Maps for query: "${query}".`);
+            leadGenProgress.statusText = `Found ${listings.length} listings from Maps. Starting enrichment...`;
 
-            try {
-              const cleanName = item.name.split(' - ')[0].split(' | ')[0].trim();
-              leadGenProgress.statusText = `Searching emails & socials for "${cleanName}"...`;
+            for (const item of listings) {
+              if (insertedCount >= targetCount) break;
 
-              const enrichResult = await emailFinderService.findEmailForLead({
-                name: 'Founder / CEO',
-                company: item.name,
-                website: website,
-                notes: ''
-              });
+              let website = item.website || null;
+              if (!website) {
+                // website lookup fallback
+                leadGenProgress.statusText = `Searching company website for "${item.name}"...`;
+                try {
+                  const searchResult = await emailFinderService.findEmailForLead({
+                    name: 'Founder / CEO',
+                    company: item.name,
+                    website: '',
+                    notes: ''
+                  });
+                  website = searchResult.website || null;
+                } catch (e) {
+                  console.log(`⚠️ Website lookup failed for ${item.name}: ${e.message}`);
+                }
+              }
 
-              const email = enrichResult.email;
-              if (!email) continue;
+              if (!website) continue; // Requires website for email finding
 
-              if (processedEmails.has(email.toLowerCase())) continue;
-              processedEmails.add(email.toLowerCase());
+              try {
+                const cleanName = item.name.split(' - ')[0].split(' | ')[0].trim();
+                leadGenProgress.statusText = `Searching emails & socials for "${cleanName}"...`;
 
-              // Deduplicate against database
-              const { data: existingLead } = await supabase
-                .from('leads')
-                .select('id')
-                .eq('email', email)
-                .maybeSingle();
+                const enrichResult = await emailFinderService.findEmailForLead({
+                  name: 'Founder / CEO',
+                  company: item.name,
+                  website: website,
+                  notes: ''
+                });
 
-              if (existingLead) continue;
+                const email = enrichResult.email;
+                if (!email) continue;
 
-              const leadData = {
-                name: cleanName,
-                company: cleanName,
-                website: website,
-                phone: item.phone || null,
-                email: email,
-                linkedin: enrichResult.linkedin || null,
-                instagram: enrichResult.instagram || null,
-                city: city,
-                country: 'India',
-                industry: industry,
-                rating: item.rating || 4.0,
-                status: 'Researched',
-                lead_score: 'Hot',
-                notes: `Auto-sourced via CRM Lead Generation Trigger on ${new Date().toLocaleDateString()}.\n` + enrichResult.notes
-              };
+                if (processedEmails.has(email.toLowerCase())) continue;
+                processedEmails.add(email.toLowerCase());
 
-              const { data: insertedLead, error: insertError } = await supabase
-                .from('leads')
-                .insert(leadData)
-                .select()
-                .single();
+                // Deduplicate against database
+                const { data: existingLead } = await supabase
+                  .from('leads')
+                  .select('id')
+                  .eq('email', email)
+                  .maybeSingle();
 
-              if (insertError) continue;
+                if (existingLead) continue;
 
-              insertedCount++;
-              leadGenProgress.insertedCount = insertedCount;
-              leadGenProgress.statusText = `[${insertedCount}/${targetCount}] Sourced verified lead: "${cleanName}" (${email})`;
-              console.log(`✅ [${insertedCount}/${targetCount}] Sourced verified lead: "${cleanName}" (${email})`);
+                const cleanCity = city.toLowerCase();
+                const country = (cleanCity.includes('auckland') || cleanCity.includes('zealand')) ? 'New Zealand' : 'India';
 
-              // Bulk start outreach sequence for the new lead
-              await sequenceService.startSequenceForLead(insertedLead.id);
-              console.log(`🚀 Automated Outreach campaign enqueued for lead: ${cleanName}`);
+                const leadData = {
+                  name: cleanName,
+                  company: cleanName,
+                  website: website,
+                  phone: item.phone || null,
+                  email: email,
+                  linkedin: enrichResult.linkedin || null,
+                  instagram: enrichResult.instagram || null,
+                  city: city,
+                  country: country,
+                  industry: industry,
+                  rating: item.rating || 4.0,
+                  status: 'Researched',
+                  lead_score: 'Hot',
+                  notes: `Auto-sourced via CRM Lead Generation Trigger on ${new Date().toLocaleDateString()}.\n` + enrichResult.notes
+                };
 
-            } catch (enrichErr) {
-              console.error(`⚠️ Automation enrichment error for "${item.name}":`, enrichErr.message);
+                const { data: insertedLead, error: insertError } = await supabase
+                  .from('leads')
+                  .insert(leadData)
+                  .select()
+                  .single();
+
+                if (insertError) continue;
+
+                insertedCount++;
+                leadGenProgress.insertedCount = insertedCount;
+                leadGenProgress.statusText = `[${insertedCount}/${targetCount}] Sourced verified lead: "${cleanName}" (${email})`;
+                console.log(`✅ [${insertedCount}/${targetCount}] Sourced verified lead: "${cleanName}" (${email})`);
+
+                // Initialize sequence in PAUSED state (idle/paused) so emails are not sent automatically
+                try {
+                  await supabase.from('sequences').insert({
+                    lead_id: insertedLead.id,
+                    current_step: 1,
+                    status: 'Paused',
+                    next_sent_at: null
+                  });
+                  console.log(`🚀 Automated Outreach campaign created in PAUSED state for lead: ${cleanName}`);
+                } catch (seqErr) {
+                  console.error(`⚠️ Failed to create paused sequence for lead ${cleanName}:`, seqErr.message);
+                }
+
+              } catch (enrichErr) {
+                console.error(`⚠️ Automation enrichment error for "${item.name}":`, enrichErr.message);
+              }
+
+              await new Promise(r => setTimeout(r, 1500));
             }
-
-            await new Promise(r => setTimeout(r, 1500));
+          } catch (err) {
+            console.error(`❌ Google Maps automation fetch failed for "${industry}" in "${city}":`, err.message);
           }
-        } catch (err) {
-          console.error(`❌ Google Maps automation fetch failed for "${industry}" in "${city}":`, err.message);
         }
       }
     }
