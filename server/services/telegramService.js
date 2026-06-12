@@ -26,17 +26,27 @@ async function sendTelegramMessage(text) {
 
   try {
     // CallMeBot Telegram Text Message API format:
-    // https://api.callmebot.com/text.php?user=[username]&text=[text]
+    // https://api.callmebot.com/text.php?user=${cleanUsername}&text=${encodeURIComponent(text)}
     const url = `https://api.callmebot.com/text.php?user=${cleanUsername}&text=${encodeURIComponent(text)}`;
     const response = await fetch(url);
+    const responseText = await response.text();
     
     if (response.ok) {
+      // CallMeBot returns 200 OK even for errors. Check body for "Error:" or "Permission denied".
+      if (responseText.includes('Error:') || responseText.includes('Permission denied') || responseText.includes('Telegram Error Code')) {
+        let errorMsg = 'Permission denied. User must authorize CallMeBot bot on Telegram.';
+        if (responseText.includes('Authenticate')) {
+          errorMsg += ' Click here to authenticate: https://api2.callmebot.com/txt/login.php';
+        }
+        console.error(`❌ Telegram notification delivery failed for ${cleanUsername}: ${errorMsg}`);
+        return { success: false, error: errorMsg };
+      }
+
       console.log(`📱 Telegram notification sent to ${cleanUsername} successfully.`);
       return { success: true };
     } else {
-      const errorText = await response.text();
-      console.error(`❌ Telegram notification failed: ${response.status} - ${errorText}`);
-      return { success: false, error: errorText };
+      console.error(`❌ Telegram notification failed: ${response.status} - ${responseText}`);
+      return { success: false, error: responseText };
     }
   } catch (err) {
     console.error('❌ Telegram dispatch exception:', err.message);
