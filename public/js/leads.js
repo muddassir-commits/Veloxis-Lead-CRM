@@ -279,7 +279,18 @@ const leads = {
           <h4 style="font-size:12px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Contact Details</h4>
           <div style="display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.15); padding:14px; border-radius:8px; border:1px solid var(--border-color);">
             <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-secondary);font-size:13px;">Email:</span> <span style="font-weight:500;">${lead.email || 'None'}</span></div>
-            <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-secondary);font-size:13px;">Phone:</span> <span style="font-weight:500;">${lead.phone || 'None'}</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="color:var(--text-secondary);font-size:13px;">Phone:</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-weight:500;">${lead.phone || 'None'}</span>
+                ${lead.phone ? `
+                  <button class="btn btn-secondary btn-icon" style="width:24px;height:24px;background:none;border:none;padding:0;" onclick="leads.checkWhatsApp('${lead.id}', '${lead.phone}')" title="Check WhatsApp">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#25D366;vertical-align:middle;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;"><span style="color:var(--text-secondary);font-size:13px;">WhatsApp Status:</span> <span>${this.getWhatsAppStatusBadge(lead.notes)}</span></div>
             <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-secondary);font-size:13px;">Website:</span> <span style="font-weight:500;">${lead.website ? `<a href="${lead.website}" target="_blank" style="color:var(--cyan);text-decoration:none;">Link</a>` : 'None'}</span></div>
             <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-secondary);font-size:13px;">Industry:</span> <span style="font-weight:500;">${lead.industry || 'Unknown'}</span></div>
             <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-secondary);font-size:13px;">Location:</span> <span style="font-weight:500;">${lead.city || 'Unknown'}, ${lead.country || 'India'}</span></div>
@@ -480,6 +491,7 @@ const leads = {
       document.getElementById('lead-input-name').value = lead.name;
       document.getElementById('lead-input-company').value = lead.company || '';
       document.getElementById('lead-input-email').value = lead.email || '';
+      document.getElementById('lead-input-phone').value = lead.phone || '';
       document.getElementById('lead-input-website').value = lead.website || '';
       document.getElementById('lead-input-linkedin').value = lead.linkedin || '';
       document.getElementById('lead-input-instagram').value = lead.instagram || '';
@@ -506,6 +518,7 @@ const leads = {
       name: document.getElementById('lead-input-name').value.trim(),
       company: document.getElementById('lead-input-company').value.trim() || null,
       email: document.getElementById('lead-input-email').value.trim() || null,
+      phone: document.getElementById('lead-input-phone').value.trim() || null,
       website: document.getElementById('lead-input-website').value.trim() || null,
       linkedin: document.getElementById('lead-input-linkedin').value.trim() || null,
       instagram: document.getElementById('lead-input-instagram').value.trim() || null,
@@ -576,6 +589,49 @@ const leads = {
     } catch (err) {
       app.showToast('error', `Failed to send email: ${err.message}`);
     }
+  },
+
+  async checkWhatsApp(leadId, phone) {
+    if (!phone) return;
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const waUrl = `https://wa.me/${cleanPhone}`;
+    window.open(waUrl, '_blank');
+    
+    // Prompt the user to log the status manually
+    setTimeout(async () => {
+      const isAvailable = confirm(`Did the WhatsApp chat open successfully for ${phone}?\n\nClick "OK" to mark as ACTIVE.\nClick "Cancel" to mark as INACTIVE.`);
+      const statusText = isAvailable ? '[WhatsApp: Active]' : '[WhatsApp: Inactive]';
+      
+      try {
+        const res = await api.getLead(leadId);
+        let currentNotes = res.lead.notes || '';
+        
+        // Remove existing whatsapp tags if any
+        currentNotes = currentNotes.replace(/\[WhatsApp:\s*(Active|Inactive|Unknown)\]/g, '').trim();
+        
+        // Append new status tag
+        const newNotes = `${currentNotes}\n${statusText}`.trim();
+        
+        await api.updateLead(leadId, { notes: newNotes });
+        app.showToast('success', `Updated WhatsApp status to: ${isAvailable ? 'Active' : 'Inactive'}`);
+        
+        // Reload details pane
+        this.openSidePanel(leadId);
+        this.loadLeads();
+      } catch (err) {
+        app.showToast('error', `Failed to update WhatsApp status: ${err.message}`);
+      }
+    }, 1500);
+  },
+
+  getWhatsAppStatusBadge(notes) {
+    const text = notes || '';
+    if (text.includes('[WhatsApp: Active]')) {
+      return '<span class="badge" style="font-size:10px; background:#25D366; color:white; font-weight:700; border-radius:12px;">Active ✅</span>';
+    } else if (text.includes('[WhatsApp: Inactive]')) {
+      return '<span class="badge" style="font-size:10px; background:var(--danger); color:white; font-weight:700; border-radius:12px;">Inactive ❌</span>';
+    }
+    return '<span class="badge" style="font-size:10px; background:rgba(255,255,255,0.05); color:var(--text-secondary); font-weight:700; border-radius:12px;">Unknown ❓</span>';
   }
 };
 

@@ -1,6 +1,15 @@
 const cheerio = require('cheerio');
 const emailVerifyService = require('./emailVerifyService');
 const dns = require('dns').promises;
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+
+// Apply Stealth Plugin to avoid bot-detect blocks during site scraping
+try {
+  puppeteer.use(StealthPlugin());
+} catch (e) {
+  // Ignored if already registered
+}
 
 /**
  * 5-Layer Email Finder Service
@@ -68,6 +77,110 @@ function normalizeUrl(url) {
     cleanUrl = `https://${cleanUrl}`;
   }
   return cleanUrl;
+}
+
+/**
+ * Advanced Layer 4 Website Scraper using Headless Chrome (Puppeteer)
+ * Executes javascript, bypasses security checkpoints, and extracts dynamic links/text
+ */
+async function scrapeWebsiteWithPuppeteer(websiteUrl) {
+  const normalized = normalizeUrl(websiteUrl);
+  if (!normalized) return { emails: [], socials: {} };
+
+  console.log(`🕵️ Launching Advanced Puppeteer browser to scan: ${normalized}`);
+  const emailsFound = new Set();
+  const socials = { facebook: null, instagram: null, linkedin: null };
+  
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--window-size=1280,800'
+      ]
+    });
+    
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1280, height: 800 });
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    
+    // Set timeout to 25s
+    await page.goto(normalized, { waitUntil: 'networkidle2', timeout: 25000 });
+    await new Promise(r => setTimeout(r, 2000)); // wait for transitions
+    
+    // 1. Scan homepage text and DOM
+    const bodyText = await page.evaluate(() => document.body.innerText);
+    const bodyHtml = await page.evaluate(() => document.documentElement.innerHTML);
+    
+    extractEmails(bodyText).forEach(e => emailsFound.add(e));
+    extractEmails(bodyHtml).forEach(e => emailsFound.add(e));
+    
+    // 2. Scan social links
+    const socialLinks = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('a[href]'));
+      const found = { facebook: null, instagram: null, linkedin: null };
+      links.forEach(a => {
+        const href = a.href;
+        if (href.includes('facebook.com')) found.facebook = href;
+        if (href.includes('instagram.com')) found.instagram = href;
+        if (href.includes('linkedin.com')) found.linkedin = href;
+      });
+      return found;
+    });
+    Object.assign(socials, socialLinks);
+    
+    // 3. Scan Contact / About subpages (visit up to 2 contact links)
+    const subpages = await page.evaluate((baseUrl) => {
+      const links = Array.from(document.querySelectorAll('a[href]'));
+      const targets = [];
+      links.forEach(a => {
+        const href = a.href;
+        const text = a.textContent.toLowerCase();
+        if (href && (text.includes('contact') || text.includes('about') || text.includes('reach') || text.includes('us'))) {
+          // Resolve relative urls
+          try {
+            const absolute = new URL(href, baseUrl).href;
+            if (!targets.includes(absolute) && targets.length < 2 && absolute.startsWith('http')) {
+              targets.push(absolute);
+            }
+          } catch (e) {
+            // Ignored
+          }
+        }
+      });
+      return targets;
+    }, normalized);
+    
+    for (const link of subpages) {
+      console.log(`🔗 Puppeteer scanning secondary link: ${link}`);
+      try {
+        await page.goto(link, { waitUntil: 'networkidle2', timeout: 15000 });
+        await new Promise(r => setTimeout(r, 1000));
+        
+        const subText = await page.evaluate(() => document.body.innerText);
+        const subHtml = await page.evaluate(() => document.documentElement.innerHTML);
+        extractEmails(subText).forEach(e => emailsFound.add(e));
+        extractEmails(subHtml).forEach(e => emailsFound.add(e));
+      } catch (subErr) {
+        console.log(`⚠️ Puppeteer failed to scan subpage: ${link}`);
+      }
+    }
+    
+  } catch (err) {
+    console.error('❌ Puppeteer scraper error:', err.message);
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
+  
+  return {
+    emails: Array.from(emailsFound),
+    socials
+  };
 }
 
 /**
@@ -199,9 +312,17 @@ async function findEmailForLead(lead) {
     return result;
   }
 
-  // LAYER 1: Deep Web Scrape
+  // LAYER 1: Deep Web Scrape (Cheerio & Fetch)
   try {
-    const webResult = await scrapeWebsiteForEmails(lead.website);
+    let webResult = await scrapeWebsiteForEmails(lead.website);
+    
+    // ADVANCED LAYER 4 FALLBACK: If standard cheerio scraping finds no emails, trigger Puppeteer!
+    if (webResult.emails.length === 0) {
+      console.log(`💡 Cheerio scraper yielded 0 emails. Launching Advanced Puppeteer Scraper...`);
+      const puppeteerResult = await scrapeWebsiteWithPuppeteer(lead.website);
+      webResult.emails = [...webResult.emails, ...puppeteerResult.emails];
+      Object.assign(webResult.socials, puppeteerResult.socials);
+    }
     
     // Update social handles if found
     if (webResult.socials.facebook) result.notes += `\n[Socials] Facebook: ${webResult.socials.facebook}`;
