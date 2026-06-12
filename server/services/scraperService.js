@@ -1,11 +1,7 @@
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const browserManager = require('./browserManager');
 const emailVerifyService = require('./emailVerifyService');
 const emailFinderService = require('./emailFinderService');
 const supabase = require('./supabaseService');
-
-// Add stealth plugin to avoid Google bot blockages
-puppeteer.use(StealthPlugin());
 
 /**
  * Scrapes Google Maps for business listings based on search query
@@ -17,22 +13,11 @@ puppeteer.use(StealthPlugin());
 async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
   console.log(`🔍 Scraping Google Maps for: "${query}" in region: ${region}`);
   
-  let browser;
+  let page;
   const results = [];
   
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--window-size=1280,800'
-      ]
-    });
-    
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 800 });
+    page = await browserManager.newPage();
     
     // Construct search URL
     const searchUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}+${encodeURIComponent(region)}`;
@@ -44,7 +29,7 @@ async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
       await page.waitForSelector('a[href*="/maps/place/"]', { timeout: 15000 });
     } catch (e) {
       console.log('⚠️ No place listings found or page loading took too long.');
-      await browser.close();
+      await page.close().catch(() => {});
       return [];
     }
 
@@ -214,8 +199,123 @@ async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
   } catch (err) {
     console.error('❌ Google Maps Puppeteer error:', err.message);
   } finally {
-    if (browser) {
-      await browser.close();
+    if (page) {
+      await page.close().catch(() => {});
+    }
+  }
+
+  return results;
+}
+
+async function scrapeSocialProfiles(platform, niche, city, limit = 20) {
+  console.log(`🔍 Social prospecting via DuckDuckGo: Platform=${platform}, Niche="${niche}", City="${city}"`);
+  
+  let page;
+  const results = [];
+  
+  try {
+    page = await browserManager.newPage();
+    
+    // Construct search query
+    const query = `site:${platform.toLowerCase()}.com "${niche}" "${city}"`;
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    
+    console.log(`🌐 Loading DuckDuckGo SERP URL: ${searchUrl}`);
+    await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 30000 });
+    
+    // Check if result containers are found
+    try {
+      await page.waitForSelector('.web-result', { timeout: 10000 });
+    } catch (e) {
+      console.log('⚠️ No DuckDuckGo results found or page took too long.');
+      await page.close().catch(() => {});
+      return [];
+    }
+
+    // Parse elements
+    const rawResults = await page.evaluate(() => {
+      const items = Array.from(document.querySelectorAll('.web-result'));
+      return items.map(el => {
+        const titleEl = el.querySelector('.result__title a');
+        const snippetEl = el.querySelector('.result__snippet');
+        const urlEl = el.querySelector('.result__url');
+        
+        let url = urlEl ? urlEl.getAttribute('href') : (titleEl ? titleEl.getAttribute('href') : null);
+        let title = titleEl ? titleEl.textContent.trim() : 'Unknown';
+        let snippet = snippetEl ? snippetEl.textContent.trim() : '';
+
+        // Clean DuckDuckGo redirect url
+        if (url && url.includes('uddg=')) {
+          try {
+            const params = new URLSearchParams(url.substring(url.indexOf('?')));
+            url = params.get('uddg');
+          } catch(e) {}
+        }
+        
+        return { url, title, snippet };
+      });
+    });
+
+    console.log(`📋 Found ${rawResults.length} raw search results. Filtering for ${platform}...`);
+
+    for (const item of rawResults) {
+      if (!item.url) continue;
+
+      const urlLower = item.url.toLowerCase();
+      
+      // Match platform domain
+      if (platform.toLowerCase() === 'instagram' && !urlLower.includes('instagram.com')) continue;
+      if (platform.toLowerCase() === 'linkedin' && !urlLower.includes('linkedin.com/in')) continue;
+
+      // Extract handle/username from URL
+      let handle = null;
+      try {
+        const parsedUrl = new URL(item.url);
+        const pathSegments = parsedUrl.pathname.split('/').filter(s => s.length > 0);
+        
+        if (platform.toLowerCase() === 'instagram') {
+          handle = pathSegments[0] || null;
+        } else if (platform.toLowerCase() === 'linkedin') {
+          handle = pathSegments[1] || null;
+        }
+      } catch (err) {
+        // Ignored
+      }
+
+      if (!handle || handle === 'p' || handle === 'explore' || handle === 'tags') continue;
+
+      // Clean profile name from DuckDuckGo title
+      let name = item.title;
+      if (platform.toLowerCase() === 'instagram') {
+        name = name.split('(@')[0].trim();
+        name = name.split('•')[0].trim();
+      } else if (platform.toLowerCase() === 'linkedin') {
+        name = name.split('-')[0].trim();
+        name = name.split('|')[0].trim();
+      }
+
+      results.push({
+        name: name || handle,
+        company: name || handle,
+        website: item.url,
+        phone: null,
+        email: null,
+        linkedin: platform.toLowerCase() === 'linkedin' ? item.url : null,
+        instagram: platform.toLowerCase() === 'instagram' ? handle : null,
+        city: city,
+        country: 'India',
+        industry: niche,
+        notes: `Prospect found via DuckDuckGo Social search. Bio: ${item.snippet}`
+      });
+
+      if (results.length >= limit) break;
+    }
+
+  } catch (err) {
+    console.error('❌ DuckDuckGo search scraper error:', err.message);
+  } finally {
+    if (page) {
+      await page.close().catch(() => {});
     }
   }
 
@@ -223,5 +323,6 @@ async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
 }
 
 module.exports = {
-  scrapeGoogleMaps
+  scrapeGoogleMaps,
+  scrapeSocialProfiles
 };

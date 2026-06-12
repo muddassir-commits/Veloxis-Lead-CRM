@@ -121,4 +121,25 @@ router.post('/bulk-enrich', async (req, res) => {
   }
 });
 
+// 4. POST - DuckDuckGo Social Profile Scraping
+router.post('/social', async (req, res) => {
+  try {
+    const { platform, niche, city, maxResults = 10 } = req.body;
+    
+    if (!platform || !niche || !city) {
+      return res.status(400).json({ success: false, error: 'platform, niche, and city parameters are required' });
+    }
+
+    const scrapedData = await scraperService.scrapeSocialProfiles(platform, niche, city, maxResults);
+    
+    res.json({ 
+      success: true, 
+      count: scrapedData.length, 
+      results: scrapedData 
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

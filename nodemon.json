@@ -1,0 +1,14 @@
+{
+  "watch": ["server/"],
+  "ext": "js,json,html",
+  "ignore": [
+    "public/",
+    "scripts/",
+    "system/",
+    "node_modules/",
+    ".git/",
+    "*.test.js",
+    "public/assets/verification/*.png"
+  ],
+  "delay": "1000"
+}

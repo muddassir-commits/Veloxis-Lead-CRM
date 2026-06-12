@@ -40,6 +40,10 @@ const api = {
     return this.request('/api/scrape/maps', 'POST', { query, region, maxResults });
   },
 
+  async scrapeSocial(platform, niche, city, maxResults) {
+    return this.request('/api/scrape/social', 'POST', { platform, niche, city, maxResults });
+  },
+
   async enrichLead(leadId) {
     return this.request('/api/scrape/enrich', 'POST', { leadId });
   },
@@ -89,6 +93,10 @@ const api = {
 
   async deleteTemplate(id) {
     return this.request(`/api/templates/${id}`, 'DELETE');
+  },
+
+  async renderTemplate(leadId, templateId, customSubject = null, customBody = null) {
+    return this.request('/api/templates/render', 'POST', { leadId, templateId, customSubject, customBody });
   },
 
   // Planner

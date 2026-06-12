@@ -308,7 +308,7 @@ const leads = {
         <div>
           <h4 style="font-size:12px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;">Actions</h4>
           <div style="display:flex; flex-direction:column; gap:8px;">
-            <button class="btn btn-secondary" style="width:100%;" onclick="leads.openSendManualModal('${lead.email}')"><i data-lucide="send"></i> Send Single Email</button>
+            <button class="btn btn-secondary" style="width:100%;" onclick="leads.openOutreachModal('${lead.id}')"><i data-lucide="send"></i> Send Outbound Message</button>
             ${seqActions}
             <button class="btn btn-secondary" style="width:100%;" onclick="leads.enrichSingleLead('${lead.id}')"><i data-lucide="sparkles"></i> Find Missing Emails</button>
           </div>
@@ -559,35 +559,241 @@ const leads = {
     }
   },
 
-  // Manual Send Modal
-  openSendManualModal(email) {
-    if (!email) {
-      app.showToast('error', 'Lead does not have an email address.');
+  // Multi-Channel Manual Outreach Modal Controllers
+  activeOutreachChannel: 'Email',
+  outreachLead: null,
+  activeTemplates: [],
+
+  async openOutreachModal(leadId) {
+    this.activeLeadId = leadId;
+    const modal = document.getElementById('modal-manual-outreach');
+    
+    // Clear fields
+    document.getElementById('outreach-lead-name').textContent = '...';
+    document.getElementById('outreach-lead-company').textContent = '...';
+    document.getElementById('outreach-input-to').value = '';
+    document.getElementById('outreach-input-subject').value = '';
+    document.getElementById('outreach-input-body').value = '';
+    document.getElementById('outreach-channel-warning').style.display = 'none';
+
+    modal.classList.add('open');
+
+    try {
+      const res = await api.getLead(leadId);
+      this.outreachLead = res.lead;
+      
+      document.getElementById('outreach-lead-name').textContent = this.outreachLead.name;
+      document.getElementById('outreach-lead-company').textContent = this.outreachLead.company || 'Direct';
+      
+      // Default to Email channel
+      this.setOutreachChannel('Email');
+    } catch (err) {
+      app.showToast('error', `Failed to load outreach details: ${err.message}`);
+      this.closeOutreachModal();
+    }
+  },
+
+  closeOutreachModal() {
+    document.getElementById('modal-manual-outreach').classList.remove('open');
+    this.outreachLead = null;
+    this.activeTemplates = [];
+  },
+
+  setOutreachChannel(channel) {
+    this.activeOutreachChannel = channel;
+    
+    // Toggle active tab buttons classes
+    const channels = ['Email', 'LinkedIn', 'Instagram'];
+    channels.forEach(ch => {
+      const btn = document.getElementById(`outreach-btn-${ch.toLowerCase()}`);
+      if (ch === channel) {
+        btn.className = 'btn btn-primary';
+        btn.style.background = '';
+      } else {
+        btn.className = 'btn btn-secondary';
+        btn.style.background = 'none';
+      }
+    });
+
+    const emailGroup = document.getElementById('outreach-email-group');
+    const subjectGroup = document.getElementById('outreach-subject-group');
+    const templateGroup = document.getElementById('outreach-template-group');
+    const socialActions = document.getElementById('outreach-social-actions');
+    const submitBtn = document.getElementById('outreach-btn-submit');
+    const warning = document.getElementById('outreach-channel-warning');
+
+    warning.style.display = 'none';
+
+    if (channel === 'Email') {
+      emailGroup.style.display = 'block';
+      subjectGroup.style.display = 'block';
+      templateGroup.style.display = 'none';
+      socialActions.style.display = 'none';
+      submitBtn.style.display = 'block';
+
+      if (this.outreachLead) {
+        document.getElementById('outreach-input-to').value = this.outreachLead.email || '';
+        if (!this.outreachLead.email) {
+          warning.textContent = '⚠️ This lead does not have an email address. Choose LinkedIn or Instagram instead!';
+          warning.style.display = 'block';
+        }
+      }
+      document.getElementById('outreach-input-subject').value = '';
+      document.getElementById('outreach-input-body').value = '';
+    } else {
+      // Social channels
+      emailGroup.style.display = 'none';
+      subjectGroup.style.display = 'none';
+      templateGroup.style.display = 'block';
+      socialActions.style.display = 'flex';
+      submitBtn.style.display = 'none';
+
+      if (this.outreachLead) {
+        if (channel === 'LinkedIn' && !this.outreachLead.linkedin) {
+          warning.textContent = '⚠️ No LinkedIn link found in CRM details for this lead. Add it in the Edit Modal.';
+          warning.style.display = 'block';
+        } else if (channel === 'Instagram' && !this.outreachLead.instagram) {
+          warning.textContent = '⚠️ No Instagram handle found in CRM details for this lead. Add it in the Edit Modal.';
+          warning.style.display = 'block';
+        }
+      }
+
+      this.loadChannelTemplates(channel);
+    }
+  },
+
+  async loadChannelTemplates(channel) {
+    const select = document.getElementById('outreach-select-template');
+    select.innerHTML = '<option value="">Loading templates...</option>';
+    document.getElementById('outreach-input-body').value = '';
+
+    try {
+      const res = await api.getTemplates(channel);
+      this.activeTemplates = res.templates || [];
+      
+      select.innerHTML = '';
+      if (this.activeTemplates.length === 0) {
+        select.innerHTML = '<option value="">No templates configured for this channel</option>';
+        return;
+      }
+
+      this.activeTemplates.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = `${t.name} (${t.principle || 'Standard'})`;
+        select.appendChild(opt);
+      });
+
+      // Render the first template
+      this.handleOutreachTemplateChange();
+    } catch (err) {
+      select.innerHTML = '<option value="">Error loading templates</option>';
+    }
+  },
+
+  async handleOutreachTemplateChange() {
+    const templateId = document.getElementById('outreach-select-template').value;
+    if (!templateId || !this.outreachLead) {
+      document.getElementById('outreach-input-body').value = '';
       return;
     }
-    document.getElementById('send-input-to').value = email;
-    document.getElementById('send-input-subject').value = '';
-    document.getElementById('send-input-body').value = '';
-    document.getElementById('modal-send-manual').classList.add('open');
+
+    try {
+      const res = await api.renderTemplate(this.outreachLead.id, templateId);
+      document.getElementById('outreach-input-body').value = res.body;
+    } catch (err) {
+      app.showToast('error', `Failed to compile template: ${err.message}`);
+    }
   },
 
-  closeSendModal() {
-    document.getElementById('modal-send-manual').classList.remove('open');
+  copyOutreachMessage() {
+    const text = document.getElementById('outreach-input-body').value.trim();
+    if (!text) return;
+
+    navigator.clipboard.writeText(text)
+      .then(() => app.showToast('success', 'Outreach message copied to clipboard!'))
+      .catch(() => app.showToast('error', 'Clipboard access denied.'));
   },
 
-  async sendManualEmail(e) {
+  async launchSocialProfile() {
+    if (!this.outreachLead) return;
+    
+    let url = '';
+    if (this.activeOutreachChannel === 'LinkedIn') {
+      url = this.outreachLead.linkedin;
+    } else if (this.activeOutreachChannel === 'Instagram') {
+      const handle = this.outreachLead.instagram.replace('@', '');
+      url = `https://instagram.com/${handle}`;
+    }
+
+    if (!url) {
+      app.showToast('error', `No profile URL configured for ${this.activeOutreachChannel}.`);
+      return;
+    }
+
+    window.open(url, '_blank');
+
+    // Prompt to log history
+    const shouldLog = document.getElementById('outreach-log-history').checked;
+    if (shouldLog) {
+      setTimeout(async () => {
+        if (confirm(`Did you successfully paste and send the message on ${this.activeOutreachChannel}?\n\nClick "OK" to log outreach in CRM.`)) {
+          try {
+            // Find active template name
+            const select = document.getElementById('outreach-select-template');
+            const templateText = select.options[select.selectedIndex]?.text || `${this.activeOutreachChannel} Outreach`;
+            
+            // Insert sequence history via API mock-up/database updates
+            const mockEmailId = 'manual-' + Math.random().toString(36).substr(2, 9);
+            
+            // Log manual history in sequences table or update notes
+            await api.updateLead(this.outreachLead.id, {
+              status: 'Contacted',
+              notes: `${this.outreachLead.notes || ''}\n[Outreach] Sent manual message via ${this.activeOutreachChannel} (${templateText}) on ${new Date().toLocaleDateString()}`.trim()
+            });
+
+            app.showToast('success', 'Logged manual outreach event successfully.');
+            this.loadLeads();
+            this.closeOutreachModal();
+          } catch (err) {
+            app.showToast('error', `Failed to log outreach event: ${err.message}`);
+          }
+        }
+      }, 1500);
+    }
+  },
+
+  async submitManualOutreach(e) {
     e.preventDefault();
-    const to = document.getElementById('send-input-to').value;
-    const subject = document.getElementById('send-input-subject').value.trim();
-    const body = document.getElementById('send-input-body').value.trim();
+    if (this.activeOutreachChannel !== 'Email') return;
+
+    const to = document.getElementById('outreach-input-to').value.trim();
+    const subject = document.getElementById('outreach-input-subject').value.trim();
+    const body = document.getElementById('outreach-input-body').value.trim();
+
+    if (!to || !subject || !body) {
+      app.showToast('error', 'All email fields are required.');
+      return;
+    }
 
     app.showToast('info', 'Dispatching email outreach...');
     try {
-      await api.sendManualEmail(to, subject, body);
-      app.showToast('success', `Outreach email dispatched successfully to ${to}.`);
-      this.closeSendModal();
+      const res = await api.sendManualEmail(to, subject, body);
+      app.showToast('success', `Outreach email sent successfully to ${to}.`);
+
+      // Log history in database if checked
+      const shouldLog = document.getElementById('outreach-log-history').checked;
+      if (shouldLog && this.outreachLead) {
+        await api.updateLead(this.outreachLead.id, {
+          status: 'Contacted',
+          notes: `${this.outreachLead.notes || ''}\n[Outreach] Sent manual Email ("${subject}") on ${new Date().toLocaleDateString()}`.trim()
+        });
+      }
+
+      this.loadLeads();
+      this.closeOutreachModal();
     } catch (err) {
-      app.showToast('error', `Failed to send email: ${err.message}`);
+      app.showToast('error', `Email dispatch failed: ${err.message}`);
     }
   },
 

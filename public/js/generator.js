@@ -4,12 +4,18 @@
 
 const generator = {
   scrapedLeads: [],
+  activeSource: 'maps',
 
   init() {
     console.log('🔄 Initializing Lead Generator Screen...');
     const form = document.getElementById('scraper-form');
     if (form) {
       form.addEventListener('submit', (e) => this.handleScrapeSubmit(e));
+    }
+
+    const socialForm = document.getElementById('social-scraper-form');
+    if (socialForm) {
+      socialForm.addEventListener('submit', (e) => this.handleSocialScrapeSubmit(e));
     }
 
     // Bind Select All Checkbox
@@ -25,6 +31,62 @@ const generator = {
     const csvInput = document.getElementById('csv-file-input');
     if (csvInput) {
       csvInput.addEventListener('change', (e) => this.handleCSVFileSelected(e));
+    }
+  },
+
+  setSource(source) {
+    this.activeSource = source;
+    const btnMaps = document.getElementById('tab-btn-maps');
+    const btnSocial = document.getElementById('tab-btn-social');
+    const cardMaps = document.getElementById('card-maps-form');
+    const cardSocial = document.getElementById('card-social-form');
+    
+    if (source === 'maps') {
+      btnMaps.className = 'btn btn-primary';
+      btnMaps.style.background = '';
+      btnSocial.className = 'btn btn-secondary';
+      btnSocial.style.background = 'none';
+      cardMaps.style.display = 'block';
+      cardSocial.style.display = 'none';
+    } else {
+      btnMaps.className = 'btn btn-secondary';
+      btnMaps.style.background = 'none';
+      btnSocial.className = 'btn btn-primary';
+      btnSocial.style.background = '';
+      cardMaps.style.display = 'none';
+      cardSocial.style.display = 'block';
+    }
+  },
+
+  async handleSocialScrapeSubmit(e) {
+    e.preventDefault();
+    const platform = document.getElementById('social-platform').value;
+    const query = document.getElementById('social-query').value.trim();
+    const region = document.getElementById('social-region').value.trim();
+    const limit = parseInt(document.getElementById('social-limit').value);
+
+    if (!query || !region) {
+      app.showToast('error', 'Keywords and Location are required.');
+      return;
+    }
+
+    // Show Loading
+    document.getElementById('scraper-loading').style.display = 'flex';
+    document.getElementById('scraper-results-card').style.display = 'none';
+    
+    const loadingText = document.getElementById('scraper-loading-text');
+    loadingText.textContent = `Scraping DuckDuckGo for ${platform} profiles matching "${query}" in ${region}...`;
+
+    try {
+      const response = await api.scrapeSocial(platform, query, region, limit);
+      this.scrapedLeads = response.results || [];
+      
+      this.renderScrapeResults();
+      app.showToast('success', `Found ${this.scrapedLeads.length} ${platform} profiles successfully.`);
+    } catch (err) {
+      app.showToast('error', `Social search failed: ${err.message}`);
+    } finally {
+      document.getElementById('scraper-loading').style.display = 'none';
     }
   },
 
@@ -165,10 +227,27 @@ const generator = {
     const lines = csvText.split(/\r?\n/).filter(line => line.trim().length > 0);
     if (lines.length < 2) return [];
 
-    // Simple CSV splitter handling quoted values
+    // Robust RFC-compliant CSV line parser handling double-quotes, commas inside quotes, and empty cells
     const splitCSVLine = (line) => {
-      const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
-      return matches.map(val => val.replace(/^"|"$/g, '').trim());
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      
+      // Clean leading/trailing quotes and return
+      return result.map(val => val.replace(/^"|"$/g, '').trim());
     };
 
     const headers = splitCSVLine(lines[0]).map(h => h.toLowerCase());

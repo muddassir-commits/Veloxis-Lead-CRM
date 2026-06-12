@@ -189,19 +189,26 @@
           </div>
         </div>
         
-        <div class="card">
-          <form id="scraper-form" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: flex-end;">
-            <div class="form-group">
+        <!-- SOURCE TABS -->
+        <div style="display: flex; gap: 8px; margin-bottom: 16px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 6px; border: 1px solid var(--border-color); width: fit-content;">
+          <button id="tab-btn-maps" class="btn btn-primary" onclick="generator.setSource('maps')" style="padding: 6px 14px; font-size: 12px; border: none; height: 32px;">🗺️ Google Maps Search</button>
+          <button id="tab-btn-social" class="btn btn-secondary" onclick="generator.setSource('social')" style="padding: 6px 14px; font-size: 12px; border: none; height: 32px; background: none;">🔗 Social Search Prospector</button>
+        </div>
+
+        <!-- Card 1: Maps Form -->
+        <div class="card" id="card-maps-form">
+          <form id="scraper-form" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: flex-end; margin-bottom: 0;">
+            <div class="form-group" style="margin-bottom: 0;">
               <label for="scrape-query">Keywords / Business Type</label>
-              <input type="text" id="scrape-query" class="form-control" placeholder="e.g. coaching institutes, real estate agents, gyms" required>
+              <input type="text" id="scrape-query" class="form-control" placeholder="e.g. coaching institutes, real estate agents, gyms">
             </div>
             
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom: 0;">
               <label for="scrape-region">Region / City</label>
-              <input type="text" id="scrape-region" class="form-control" placeholder="e.g. Lucknow, Delhi, London" required>
+              <input type="text" id="scrape-region" class="form-control" placeholder="e.g. Lucknow, Delhi, London">
             </div>
             
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom: 0;">
               <label for="scrape-limit">Max Results</label>
               <select id="scrape-limit" class="form-control">
                 <option value="5">5 leads</option>
@@ -212,6 +219,41 @@
             </div>
             
             <button type="submit" class="btn btn-primary" style="height: 42px;"><i data-lucide="search"></i> Scrape Maps</button>
+          </form>
+        </div>
+
+        <!-- Card 2: Social Search Form -->
+        <div class="card" id="card-social-form" style="display: none;">
+          <form id="social-scraper-form" onsubmit="generator.handleSocialScrapeSubmit(event)" style="display: grid; grid-template-columns: 1.2fr 2fr 1.5fr 1fr auto; gap: 15px; align-items: flex-end; margin-bottom: 0;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="social-platform">Social Platform</label>
+              <select id="social-platform" class="form-control">
+                <option value="LinkedIn" selected>🔗 LinkedIn</option>
+                <option value="Instagram">📸 Instagram</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="social-query">Niche / Title Keywords</label>
+              <input type="text" id="social-query" class="form-control" placeholder="e.g. CEO, Fitness Coach, Marketing Manager">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="social-region">Location / City</label>
+              <input type="text" id="social-region" class="form-control" placeholder="e.g. Lucknow, Sydney, London">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="social-limit">Max Results</label>
+              <select id="social-limit" class="form-control">
+                <option value="5">5 leads</option>
+                <option value="10" selected>10 leads</option>
+                <option value="20">20 leads</option>
+                <option value="50">50 leads</option>
+              </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="height: 42px;"><i data-lucide="search"></i> Find Profiles</button>
           </form>
         </div>
         
@@ -775,31 +817,78 @@
     </div>
   </div>
 
-  <!-- 3. Manual Email Sending Modal -->
-  <div class="modal-overlay" id="modal-send-manual">
-    <div class="modal-card">
+  <!-- 3. Multi-Channel Manual Outreach Modal -->
+  <div class="modal-overlay" id="modal-manual-outreach">
+    <div class="modal-card" style="max-width: 650px;">
       <div class="modal-header">
-        <h3>Send Custom Outreach Email</h3>
-        <button class="btn btn-secondary btn-icon" onclick="leads.closeSendModal()"><i data-lucide="x"></i></button>
+        <h3>Multi-Channel Manual Outreach</h3>
+        <button class="btn btn-secondary btn-icon" onclick="leads.closeOutreachModal()"><i data-lucide="x"></i></button>
       </div>
-      <form id="modal-send-form" onsubmit="leads.sendManualEmail(event)">
-        <div class="modal-body">
+      <form id="outreach-manual-form" onsubmit="leads.submitManualOutreach(event)">
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 15px;">
+          
+          <!-- Channel selector buttons -->
           <div class="form-group">
-            <label for="send-input-to">Recipient Email</label>
-            <input type="email" id="send-input-to" class="form-control" readonly required>
+            <label>Outreach Channel</label>
+            <div style="display: flex; gap: 10px; background: rgba(0,0,0,0.15); padding: 5px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content;">
+              <button type="button" id="outreach-btn-email" class="btn btn-primary" onclick="leads.setOutreachChannel('Email')" style="border: none; padding: 6px 16px; font-size: 13px; height: 32px;">📧 Email</button>
+              <button type="button" id="outreach-btn-linkedin" class="btn btn-secondary" onclick="leads.setOutreachChannel('LinkedIn')" style="border: none; padding: 6px 16px; font-size: 13px; height: 32px; background: none;">🔗 LinkedIn</button>
+              <button type="button" id="outreach-btn-instagram" class="btn btn-secondary" onclick="leads.setOutreachChannel('Instagram')" style="border: none; padding: 6px 16px; font-size: 13px; height: 32px; background: none;">📸 Instagram</button>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="send-input-subject">Subject Line *</label>
-            <input type="text" id="send-input-subject" class="form-control" required>
+
+          <!-- Lead Info Indicator -->
+          <div id="outreach-lead-info" style="font-size: 12px; color: var(--text-secondary); background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+            Prospect: <strong id="outreach-lead-name" style="color: var(--text);">...</strong> | Company: <strong id="outreach-lead-company" style="color: var(--text);">...</strong>
           </div>
+
+          <!-- Warnings if Channel Credentials missing -->
+          <div id="outreach-channel-warning" style="display: none; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: normal; text-align: left; background: rgba(239,68,68,0.1); border: 1px solid var(--danger); color: #f87171;">
+            <!-- Dynamic warnings -->
+          </div>
+
+          <!-- Template Dropdown selector -->
+          <div class="form-group" id="outreach-template-group" style="display: none;">
+            <label for="outreach-select-template">Select Outbound Template</label>
+            <select id="outreach-select-template" class="form-control" onchange="leads.handleOutreachTemplateChange()">
+              <!-- Dynamic templates -->
+            </select>
+          </div>
+
+          <!-- Fields depending on channel -->
+          <!-- Recipient email -->
+          <div class="form-group" id="outreach-email-group">
+            <label for="outreach-input-to">Recipient Email</label>
+            <input type="email" id="outreach-input-to" class="form-control" readonly placeholder="No email associated with lead">
+          </div>
+
+          <!-- Subject (only for Email) -->
+          <div class="form-group" id="outreach-subject-group">
+            <label for="outreach-input-subject">Subject Line *</label>
+            <input type="text" id="outreach-input-subject" class="form-control">
+          </div>
+
+          <!-- Message Body -->
           <div class="form-group">
-            <label for="send-input-body">Message HTML/Body *</label>
-            <textarea id="send-input-body" class="form-control" rows="8" required></textarea>
+            <label for="outreach-input-body">Message Body *</label>
+            <textarea id="outreach-input-body" class="form-control" rows="8" required></textarea>
+          </div>
+
+          <!-- Action buttons for social platform copy/launch -->
+          <div style="display: flex; gap: 10px; margin-top: 5px;" id="outreach-social-actions">
+            <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="leads.copyOutreachMessage()"><i data-lucide="copy"></i> Copy Message</button>
+            <button type="button" id="outreach-btn-launch" class="btn btn-secondary" style="flex: 1; color: var(--cyan);" onclick="leads.launchSocialProfile()"><i data-lucide="external-link"></i> Open Profile & Send</button>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="leads.closeSendModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary"><i data-lucide="send"></i> Dispatch Email</button>
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <input type="checkbox" id="outreach-log-history" checked style="width: 15px; height: 15px; cursor: pointer;">
+            <label for="outreach-log-history" style="font-size: 12px; margin-bottom: 0; cursor: pointer; color: var(--text-secondary);">Log outreach event in CRM timeline</label>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn btn-secondary" onclick="leads.closeOutreachModal()">Close</button>
+            <button type="submit" id="outreach-btn-submit" class="btn btn-primary"><i data-lucide="send"></i> Dispatch Email</button>
+          </div>
         </div>
       </form>
     </div>

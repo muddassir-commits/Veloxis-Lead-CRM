@@ -4,6 +4,7 @@ const supabase = require('./supabaseService');
 const emailService = require('./emailService');
 const templateEngine = require('../utils/templateEngine');
 const timezoneHelper = require('../utils/timezoneHelper');
+const nameHelper = require('../utils/nameHelper');
 
 // Store Cron Task instance
 let cronTask = null;
@@ -123,9 +124,14 @@ async function sendSequenceStep(seq, scheduleConfig, emailSig) {
   }
 
   // 2. Compile subject and body variables
+  const greetingName = nameHelper.getCleanGreetingName(lead.name, lead.company);
+  const companyShort = nameHelper.getCleanCompanyName(lead.company || lead.name);
+
   const dataContext = {
-    name: lead.name,
+    name: greetingName, // Default name to greeting to prevent long/generic names
+    greeting_name: greetingName,
     company: lead.company || 'your business',
+    company_short: companyShort,
     website: lead.website || '',
     industry: lead.industry || 'your sector',
     city: lead.city || 'your city',

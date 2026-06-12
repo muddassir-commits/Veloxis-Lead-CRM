@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
 const sequenceService = require('./services/sequenceService');
+const browserManager = require('./services/browserManager');
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -89,18 +90,20 @@ const server = app.listen(PORT, () => {
 });
 
 // Graceful Shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM signal received. Shutting down gracefully...');
   sequenceService.stopScheduler();
+  await browserManager.close();
   server.close(() => {
     console.log('Server connection closed.');
     process.exit(0);
   });
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('SIGINT signal received. Shutting down gracefully...');
   sequenceService.stopScheduler();
+  await browserManager.close();
   server.close(() => {
     console.log('Server connection closed.');
     process.exit(0);

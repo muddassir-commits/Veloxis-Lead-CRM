@@ -1,15 +1,7 @@
 const cheerio = require('cheerio');
 const emailVerifyService = require('./emailVerifyService');
 const dns = require('dns').promises;
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-
-// Apply Stealth Plugin to avoid bot-detect blocks during site scraping
-try {
-  puppeteer.use(StealthPlugin());
-} catch (e) {
-  // Ignored if already registered
-}
+const browserManager = require('./browserManager');
 
 /**
  * 5-Layer Email Finder Service
@@ -87,25 +79,13 @@ async function scrapeWebsiteWithPuppeteer(websiteUrl) {
   const normalized = normalizeUrl(websiteUrl);
   if (!normalized) return { emails: [], socials: {} };
 
-  console.log(`🕵️ Launching Advanced Puppeteer browser to scan: ${normalized}`);
+  console.log(`🕵️ Requesting Puppeteer page from Singleton to scan: ${normalized}`);
   const emailsFound = new Set();
   const socials = { facebook: null, instagram: null, linkedin: null };
   
-  let browser;
+  let page;
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--window-size=1280,800'
-      ]
-    });
-    
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 800 });
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    page = await browserManager.newPage();
     
     // Set timeout to 25s
     await page.goto(normalized, { waitUntil: 'networkidle2', timeout: 25000 });
@@ -172,8 +152,12 @@ async function scrapeWebsiteWithPuppeteer(websiteUrl) {
   } catch (err) {
     console.error('❌ Puppeteer scraper error:', err.message);
   } finally {
-    if (browser) {
-      await browser.close();
+    if (page) {
+      try {
+        await page.close();
+      } catch (closeErr) {
+        // Ignored
+      }
     }
   }
   
@@ -291,11 +275,18 @@ async function generateCommonPatterns(websiteUrl) {
 async function findEmailForLead(lead) {
   console.log(`🔍 Initializing Email Finder for: ${lead.name} (${lead.company})`);
   
+  // Strip previous [Email Finder] and [Socials] lines from notes to prevent duplicate logs
+  const sanitizedNotes = (lead.notes || '')
+    .replace(/^\[Email Finder\].*$/gm, '')
+    .replace(/^\[Socials\].*$/gm, '')
+    .replace(/^\s*[\r\n]/gm, '')
+    .trim();
+
   const result = {
     email: null,
     linkedin: lead.linkedin || null,
     instagram: lead.instagram || null,
-    notes: lead.notes || ''
+    notes: sanitizedNotes
   };
 
   // Skip if lead already has a valid email

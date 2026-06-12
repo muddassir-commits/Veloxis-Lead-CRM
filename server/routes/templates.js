@@ -74,4 +74,76 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// 5. POST - Render template with lead variables
+router.post('/render', async (req, res) => {
+  try {
+    const { leadId, templateId, customSubject, customBody } = req.body;
+    
+    if (!leadId) {
+      return res.status(400).json({ success: false, error: 'leadId is required' });
+    }
+
+    // Fetch Lead
+    const { data: lead, error: leadErr } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('id', leadId)
+      .maybeSingle();
+
+    if (leadErr || !lead) {
+      return res.status(404).json({ success: false, error: 'Lead not found' });
+    }
+
+    // Fetch Template if ID is provided
+    let subject = customSubject || '';
+    let body = customBody || '';
+
+    if (templateId) {
+      const { data: template } = await supabase
+        .from('templates')
+        .select('*')
+        .eq('id', templateId)
+        .maybeSingle();
+
+      if (template) {
+        subject = template.subject;
+        body = template.body;
+      }
+    }
+
+    // Fetch Signature
+    const { data: sigSettings } = await supabase.from('settings').select('value').eq('key', 'email_signature').maybeSingle();
+    const emailSig = sigSettings?.value?.signature || '';
+
+    // Clean names
+    const nameHelper = require('../utils/nameHelper');
+    const greetingName = nameHelper.getCleanGreetingName(lead.name, lead.company);
+    const companyShort = nameHelper.getCleanCompanyName(lead.company || lead.name);
+
+    const dataContext = {
+      name: greetingName,
+      greeting_name: greetingName,
+      company: lead.company || 'your business',
+      company_short: companyShort,
+      website: lead.website || '',
+      industry: lead.industry || 'your sector',
+      city: lead.city || 'your city',
+      signature: emailSig
+    };
+
+    const templateEngine = require('../utils/templateEngine');
+    const compiledSubject = templateEngine.compileTemplate(subject, dataContext);
+    const compiledBody = templateEngine.compileTemplate(body, dataContext);
+
+    res.json({
+      success: true,
+      subject: compiledSubject,
+      body: compiledBody,
+      lead
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

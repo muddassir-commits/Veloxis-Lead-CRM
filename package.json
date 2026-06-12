@@ -5,7 +5,7 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node --watch server/index.js",
+    "dev": "nodemon server/index.js",
     "setup:email": "node scripts/setup-email.js",
     "setup:supabase": "node scripts/setup-supabase.js",
     "seed:templates": "node scripts/seed-templates.js",
@@ -31,5 +31,8 @@
     "node": ">=18.0.0"
   },
   "author": "Muddassir Ali",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
 }
