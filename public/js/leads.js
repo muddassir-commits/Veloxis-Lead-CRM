@@ -166,7 +166,7 @@ const leads = {
     document.getElementById('crm-showing-count').textContent = slicedList.length;
 
     if (slicedList.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No leads in CRM. Click "Auto-Generate Leads" to scrape new leads.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">No leads in CRM. Click "Auto-Generate Leads" to scrape new leads.</td></tr>';
       return;
     }
 
@@ -181,12 +181,21 @@ const leads = {
 
       const isChecked = this.selectedLeadIds.has(lead.id);
 
+      // Prepare clean tooltip for notes
+      const cleanNote = (lead.notes || '').replace(/"/g, '&quot;');
+      const displayNote = lead.notes && lead.notes !== 'N/A' 
+        ? (lead.notes.includes('[CRITICAL GAP / LACKING AREA]') 
+            ? lead.notes.substring(lead.notes.indexOf('[CRITICAL GAP / LACKING AREA]') + 30).split('\n')[0].substring(0, 45) + '...'
+            : lead.notes.substring(0, 45) + '...')
+        : (lead.notes || 'N/A');
+
       tr.innerHTML = `
         <td><input type="checkbox" class="crm-item-check" data-id="${lead.id}" ${isChecked ? 'checked' : ''} onclick="leads.handleRowCheck(event, '${lead.id}')"></td>
         <td class="lead-name-cell" title="${lead.name}">${lead.name}</td>
         <td class="company-cell" title="${lead.company || ''}">${lead.company || '<span style="color:var(--text-muted);">None</span>'}</td>
         <td class="email-cell" title="${lead.email || ''}">${lead.email || '<span style="color:var(--text-muted);font-style:italic;">No Email</span>'}</td>
         <td class="website-cell">${lead.website ? `<a href="${lead.website}" target="_blank" style="color:var(--cyan);text-decoration:none;"><i data-lucide="link-2" style="width:12px;height:12px;display:inline-block;vertical-align:middle;"></i> Website</a>` : '<span style="color:var(--text-muted);">None</span>'}</td>
+        <td class="notes-cell" title="${cleanNote}" style="font-size:12px; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-secondary); font-family:monospace;">${displayNote}</td>
         <td><span class="badge badge-${lead.status.toLowerCase().replace(' ', '')}">${lead.status}</span></td>
         <td><span class="score-badge score-${lead.lead_score.toLowerCase()}">${lead.lead_score}</span></td>
         <td>
