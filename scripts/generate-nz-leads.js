@@ -6,9 +6,19 @@ const emailFinderService = require('../server/services/emailFinderService');
 
 async function run() {
   console.log('🚀 Starting Multi-Query Google Maps Lead Generation for Auckland, New Zealand...');
-  console.log('📋 Niche: Home Remodeling & Construction | Target: 90 Verified Leads');
+  console.log('📋 Niche: Home Remodeling & Construction | Target: 50 Total Leads');
 
-  const targetCount = 90;
+  // Target total leads in CRM is 50
+  const targetTotal = 50;
+  const { count: existingCount } = await supabase.from('leads').select('id', { count: 'exact', head: true });
+  const targetCount = Math.max(0, targetTotal - (existingCount || 0));
+  console.log(`📊 CRM currently has ${existingCount || 0} leads. Sourcing target for this run: ${targetCount} new leads.`);
+
+  if (targetCount <= 0) {
+    console.log('✅ CRM already has 50 or more leads. Sourcing complete.');
+    return;
+  }
+  
   let insertedCount = 0;
   
   const queries = [

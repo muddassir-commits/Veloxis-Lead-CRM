@@ -469,10 +469,26 @@ async function runDailyLeadGeneration(targetCount = 100, customIndustries = null
 }
 
 /**
+ * Helper to get the UTC Date object representing 00:00:00.000 in IST (Asia/Kolkata timezone)
+ * @returns {Date}
+ */
+function getStartOfTodayIST() {
+  const now = new Date();
+  // Shift to IST timezone
+  const istTime = new Date(now.getTime() + (5.5 * 3600000));
+  // Zero out the time using UTC methods (since they match the calendar day in IST now)
+  istTime.setUTCHours(0, 0, 0, 0);
+  // Shift back to UTC
+  return new Date(istTime.getTime() - (5.5 * 3600000));
+}
+
+/**
  * Gather CRM statistics and dispatch summary reports via WhatsApp, Telegram, and Email
  */
 async function sendDailyReport() {
   console.log('📊 Gathering daily CRM statistics for summary report...');
+
+  const startOfToday = getStartOfTodayIST();
 
   // 1. Count active campaigns
   const { data: runningSequences } = await supabase.from('sequences').select('id').eq('status', 'Running');
@@ -487,24 +503,91 @@ async function sendDailyReport() {
     leadsByStatus[l.status] = (leadsByStatus[l.status] || 0) + 1;
   });
 
-  const { data: history } = await supabase.from('sequence_history').select('id, sent_at');
-  const totalSent = history?.length || 0;
+  // Fetch total sent to date count using optimized head query
+  const { count: totalSentCount, error: totalSentError } = await supabase
+    .from('sequence_history')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'Sent');
+  const totalSent = totalSentCount || 0;
+
+  // Fetch today's dispatches from sequence_history including lead details
+  const { data: todayHistory, error: historyError } = await supabase
+    .from('sequence_history')
+    .select('id, sent_at, status, step, leads(name, email)')
+    .gte('sent_at', startOfToday.toISOString());
 
   let emailsSentToday = 0;
-  history.forEach(h => {
-    const isSentToday = h.sent_at && (new Date(h.sent_at).toDateString() === new Date().toDateString());
-    if (isSentToday) {
-      emailsSentToday++;
-    }
-  });
+  const todayDeliveryFailures = [];
 
+  if (todayHistory) {
+    todayHistory.forEach(h => {
+      if (h.status === 'Sent') {
+        emailsSentToday++;
+      } else if (h.status && h.status.toLowerCase().startsWith('failed')) {
+        todayDeliveryFailures.push(h);
+      }
+    });
+  }
+
+  // Fetch email tracking records
   const { data: tracking } = await supabase.from('email_tracking').select('opens');
   const uniqueOpened = tracking?.filter(t => t.opens > 0).length || 0;
   const openRate = totalSent > 0 ? Math.round((uniqueOpened / totalSent) * 100) : 0;
 
+  // Fetch verification failures from settings
+  const { data: verifSetting } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', 'verification_failures')
+    .maybeSingle();
+
+  const failuresList = verifSetting?.value?.failures || [];
+  const todayFailures = failuresList.filter(f => new Date(f.timestamp) >= startOfToday);
+
+  // Group and count verification failures by reason
+  const verifReasonCounts = {};
+  todayFailures.forEach(f => {
+    verifReasonCounts[f.reason] = (verifReasonCounts[f.reason] || 0) + 1;
+  });
+
+  // Get last 5 blocked examples (newest first)
+  const last5Blocked = todayFailures.slice(-5).reverse();
+
   const dateStr = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
-  // 3. Construct summary message
+  // 3. Construct summary messages
+  
+  // Format verification failures section
+  let verifFailuresText = '';
+  if (todayFailures.length > 0) {
+    verifFailuresText = `\n❌ *Email Verification Failures Today (${todayFailures.length})*`;
+    for (const [reason, count] of Object.entries(verifReasonCounts)) {
+      verifFailuresText += `\n- ${reason}: ${count}`;
+    }
+    if (last5Blocked.length > 0) {
+      verifFailuresText += `\n\n*Last 5 Blocked Examples:*`;
+      last5Blocked.forEach((f, idx) => {
+        verifFailuresText += `\n${idx + 1}. ${f.email} (${f.reason})`;
+      });
+    }
+  } else {
+    verifFailuresText = `\n❌ *Email Verification Failures Today*: None`;
+  }
+
+  // Format delivery failures section
+  let deliveryFailuresText = '';
+  if (todayDeliveryFailures.length > 0) {
+    deliveryFailuresText = `\n⚠️ *Outreach Delivery Failures Today (${todayDeliveryFailures.length})*`;
+    todayDeliveryFailures.forEach(h => {
+      const leadName = h.leads?.name || 'Unknown';
+      const leadEmail = h.leads?.email || 'N/A';
+      const errorMsg = h.status.replace(/^Failed:\s*/i, '');
+      deliveryFailuresText += `\n- ${leadName} (${leadEmail}): ${errorMsg}`;
+    });
+  } else {
+    deliveryFailuresText = `\n⚠️ *Outreach Delivery Failures Today*: None`;
+  }
+
   const reportText =
     `📊 *Veloxis CRM Outreach Daily Report*
 📅 Date: ${dateStr}
@@ -524,7 +607,9 @@ async function sendDailyReport() {
 - Followed Up: ${leadsByStatus['Followed Up'] || 0}
 - Replied: ${leadsByStatus['Replied'] || 0}
 - Open Rate: ${openRate}%
-- Replies Received: ${leadsByStatus['Replied'] || 0}`;
+- Replies Received: ${leadsByStatus['Replied'] || 0}
+${verifFailuresText}
+${deliveryFailuresText}`;
 
   console.log('📱 Outbound Report Text:\n', reportText);
 
@@ -542,8 +627,84 @@ async function sendDailyReport() {
     console.error('⚠️ Failed to dispatch Telegram message:', tgErr.message);
   }
 
-  // 6. Send Email summary report (100% reliable backup!)
+  // 6. Send Email summary report
   try {
+    // Build HTML Verification failures representation
+    let verifFailuresHtml = '';
+    if (todayFailures.length > 0) {
+      verifFailuresHtml = `
+        <h3 style="color: #F44336; margin-top: 20px;">❌ Email Verification Failures Today (${todayFailures.length})</h3>
+        <ul style="padding-left: 20px; font-size: 14px;">
+          ${Object.entries(verifReasonCounts).map(([reason, count]) => `
+            <li><strong>${reason}:</strong> ${count}</li>
+          `).join('')}
+        </ul>
+        <h4 style="margin-top: 15px; color: #555; font-size: 14px;">Last 5 Blocked Examples:</h4>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px;">
+          <thead>
+            <tr style="background-color: #f2f2f2;">
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Email</th>
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Reason</th>
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Time (IST)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${last5Blocked.map(f => {
+              const fTime = new Date(f.timestamp).toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' });
+              return `
+                <tr>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${f.email}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px; color: #D32F2F; font-weight: 500;">${f.reason}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px; color: #666;">${fTime} IST</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    } else {
+      verifFailuresHtml = `
+        <h3 style="color: #4CAF50; margin-top: 20px;">❌ Email Verification Failures Today</h3>
+        <p style="color: #4CAF50; font-weight: bold; font-size: 14px;">🎉 No verification failures today.</p>
+      `;
+    }
+
+    // Build HTML Delivery failures representation
+    let deliveryFailuresHtml = '';
+    if (todayDeliveryFailures.length > 0) {
+      deliveryFailuresHtml = `
+        <h3 style="color: #FF9800; margin-top: 20px;">⚠️ Outreach Delivery Failures Today (${todayDeliveryFailures.length})</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px;">
+          <thead>
+            <tr style="background-color: #f2f2f2;">
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Recipient</th>
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Email</th>
+              <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Error Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${todayDeliveryFailures.map(h => {
+              const leadName = h.leads?.name || 'Unknown';
+              const leadEmail = h.leads?.email || 'N/A';
+              const errorMsg = h.status.replace(/^Failed:\s*/i, '');
+              return `
+                <tr>
+                  <td style="border: 1px solid #ddd; padding: 8px; font-weight: 500;">${leadName}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${leadEmail}</td>
+                  <td style="border: 1px solid #ddd; padding: 8px; color: #D32F2F;">${errorMsg}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    } else {
+      deliveryFailuresHtml = `
+        <h3 style="color: #4CAF50; margin-top: 20px;">⚠️ Outreach Delivery Failures Today</h3>
+        <p style="color: #4CAF50; font-weight: bold; font-size: 14px;">🎉 No delivery failures today.</p>
+      `;
+    }
+
     const reportHtml = `
       <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
@@ -572,6 +733,11 @@ async function sendDailyReport() {
             <li><strong>Open Rate:</strong> ${openRate}%</li>
             <li><strong>Replies Received:</strong> ${leadsByStatus['Replied'] || 0}</li>
           </ul>
+
+          ${verifFailuresHtml}
+
+          ${deliveryFailuresHtml}
+
           <p style="font-size: 12px; color: #777; margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 10px;">
             Sent automatically by Veloxis Command Center scheduler.
           </p>

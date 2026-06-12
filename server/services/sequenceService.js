@@ -158,6 +158,19 @@ async function sendSequenceStep(seq, scheduleConfig, emailSig) {
 
   if (!sendResult.success) {
     console.error(`❌ Send failed for lead ${lead.email}: ${sendResult.error}. Pausing sequence.`);
+    
+    // Log failure in sequence history for reporting (truncated to 50 chars max due to VARCHAR(50) DB limit)
+    const errorStatus = `Failed: ${sendResult.error || 'SMTP Error'}`.substring(0, 50);
+    await supabase.from('sequence_history').insert({
+      sequence_id: seq.id,
+      lead_id: lead.id,
+      step: step,
+      template_id: template.id,
+      status: errorStatus
+    }).catch(historyErr => {
+      console.error('⚠️ Failed to log sequence history failure:', historyErr.message);
+    });
+
     await supabase.from('sequences').update({ status: 'Paused', updated_at: new Date().toISOString() }).eq('id', seq.id);
     return;
   }

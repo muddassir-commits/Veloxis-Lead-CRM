@@ -49,10 +49,12 @@ function extractEmails(text) {
   const uniqueEmails = new Set();
   
   for (const email of matches) {
-    const cleanEmail = email.toLowerCase().trim();
-    const isAsset = ignoredExtensions.some(ext => cleanEmail.endsWith(ext));
+    const cleaned = emailVerifyService.cleanEmailAddress(email);
+    if (!cleaned) continue;
+    
+    const isAsset = ignoredExtensions.some(ext => cleaned.endsWith(ext));
     if (!isAsset) {
-      uniqueEmails.add(cleanEmail);
+      uniqueEmails.add(cleaned);
     }
   }
   
@@ -91,11 +93,8 @@ async function scrapeWebsiteWithPuppeteer(websiteUrl) {
     await page.goto(normalized, { waitUntil: 'networkidle2', timeout: 25000 });
     await new Promise(r => setTimeout(r, 2000)); // wait for transitions
     
-    // 1. Scan homepage text and DOM
-    const bodyText = await page.evaluate(() => document.body.innerText);
+    // 1. Scan homepage HTML (tag boundaries prevent text squashing)
     const bodyHtml = await page.evaluate(() => document.documentElement.innerHTML);
-    
-    extractEmails(bodyText).forEach(e => emailsFound.add(e));
     extractEmails(bodyHtml).forEach(e => emailsFound.add(e));
     
     // 2. Scan social links
@@ -146,9 +145,7 @@ async function scrapeWebsiteWithPuppeteer(websiteUrl) {
         await page.goto(link, { waitUntil: 'networkidle2', timeout: 15000 });
         await new Promise(r => setTimeout(r, 1000));
         
-        const subText = await page.evaluate(() => document.body.innerText);
         const subHtml = await page.evaluate(() => document.documentElement.innerHTML);
-        extractEmails(subText).forEach(e => emailsFound.add(e));
         extractEmails(subHtml).forEach(e => emailsFound.add(e));
       } catch (subErr) {
         console.log(`⚠️ Puppeteer failed to scan subpage: ${link}`);
@@ -191,10 +188,8 @@ async function scrapeWebsiteForEmails(websiteUrl) {
 
   const $ = cheerio.load(html);
 
-  // 1. Scan homepage text and tags
-  const pageText = $('body').text();
-  extractEmails(pageText).forEach(email => emailsFound.add(email));
-  extractEmails(html).forEach(email => emailsFound.add(email)); // Scan tags/attributes (e.g. href="mailto:")
+  // 1. Scan homepage HTML (tag boundaries prevent text squashing)
+  extractEmails(html).forEach(email => emailsFound.add(email));
 
   // 2. Scan social links from homepage
   $('a[href]').each((i, el) => {
@@ -234,8 +229,6 @@ async function scrapeWebsiteForEmails(websiteUrl) {
     console.log(`🔗 Checking secondary page: ${link}`);
     const subHtml = await fetchHtml(link);
     if (subHtml) {
-      const sub$ = cheerio.load(subHtml);
-      extractEmails(sub$('body').text()).forEach(email => emailsFound.add(email));
       extractEmails(subHtml).forEach(email => emailsFound.add(email));
     }
   }
@@ -360,11 +353,14 @@ async function findEmailForLead(lead) {
   };
 
   // Skip if lead already has a valid email
-  if (lead.email && emailVerifyService.validateSyntax(lead.email)) {
-    const verify = await emailVerifyService.verifyEmail(lead.email);
-    if (verify.isValid) {
-      result.email = lead.email;
-      return result;
+  if (lead.email) {
+    const cleaned = emailVerifyService.cleanEmailAddress(lead.email);
+    if (cleaned && emailVerifyService.validateSyntax(cleaned)) {
+      const verify = await emailVerifyService.verifyEmail(cleaned);
+      if (verify.isValid) {
+        result.email = cleaned;
+        return result;
+      }
     }
   }
 
@@ -403,12 +399,15 @@ async function findEmailForLead(lead) {
 
     // Validate any scraped emails
     for (const scrapedEmail of webResult.emails) {
-      const verify = await emailVerifyService.verifyEmail(scrapedEmail);
-      if (verify.isValid) {
-        console.log(`✅ Valid Email Found via Web-Scraping: ${scrapedEmail}`);
-        result.email = scrapedEmail;
-        result.notes += `\n[Email Finder] Found email via website scrape: ${scrapedEmail}`;
-        return result;
+      const cleaned = emailVerifyService.cleanEmailAddress(scrapedEmail);
+      if (cleaned) {
+        const verify = await emailVerifyService.verifyEmail(cleaned);
+        if (verify.isValid) {
+          console.log(`✅ Valid Email Found via Web-Scraping: ${cleaned}`);
+          result.email = cleaned;
+          result.notes += `\n[Email Finder] Found email via website scrape: ${cleaned}`;
+          return result;
+        }
       }
     }
   } catch (err) {
@@ -420,12 +419,15 @@ async function findEmailForLead(lead) {
     const patternEmails = await generateCommonPatterns(website);
     // Since verification makes external network requests, we test candidates in parallel
     for (const candidate of patternEmails) {
-      const verify = await emailVerifyService.verifyEmail(candidate);
-      if (verify.isValid) {
-        console.log(`✅ Valid Email Found via Domain Patterns: ${candidate}`);
-        result.email = candidate;
-        result.notes += `\n[Email Finder] Generated valid domain pattern email: ${candidate}`;
-        return result;
+      const cleaned = emailVerifyService.cleanEmailAddress(candidate);
+      if (cleaned) {
+        const verify = await emailVerifyService.verifyEmail(cleaned);
+        if (verify.isValid) {
+          console.log(`✅ Valid Email Found via Domain Patterns: ${cleaned}`);
+          result.email = cleaned;
+          result.notes += `\n[Email Finder] Generated valid domain pattern email: ${cleaned}`;
+          return result;
+        }
       }
     }
   } catch (err) {
@@ -442,12 +444,15 @@ async function findEmailForLead(lead) {
       const firstName = lead.name.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
       const nameCandidate = `${firstName}@${domain}`;
 
-      const verify = await emailVerifyService.verifyEmail(nameCandidate);
-      if (verify.isValid) {
-        console.log(`✅ Valid Email Found via Name Matching: ${nameCandidate}`);
-        result.email = nameCandidate;
-        result.notes += `\n[Email Finder] Generated valid name candidate email: ${nameCandidate}`;
-        return result;
+      const cleaned = emailVerifyService.cleanEmailAddress(nameCandidate);
+      if (cleaned) {
+        const verify = await emailVerifyService.verifyEmail(cleaned);
+        if (verify.isValid) {
+          console.log(`✅ Valid Email Found via Name Matching: ${cleaned}`);
+          result.email = cleaned;
+          result.notes += `\n[Email Finder] Generated valid name candidate email: ${cleaned}`;
+          return result;
+        }
       }
     } catch (err) {
       // Ignored
