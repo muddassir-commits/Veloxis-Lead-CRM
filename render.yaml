@@ -26,3 +26,18 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      - key: BACKEND_URL
+        sync: false
+      - key: APOLLO_API_KEY
+        sync: false
+      - key: REPORT_EMAIL
+        sync: false
+      - key: CALLMEBOT_API_KEY
+        sync: false
+      - key: WHATSAPP_PHONE
+        sync: false
+      - key: TELEGRAM_USERNAME
+        sync: false
+      - key: PUPPETEER_CACHE_DIR
+        value: /opt/render/project/src/.cache/puppeteer
+
