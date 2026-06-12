@@ -15,8 +15,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend dashboard assets
-app.use(express.static(path.join(__dirname, '../public')));
+// Serve static frontend dashboard assets with no-cache headers to prevent browser caching during updates
+app.use(express.static(path.join(__dirname, '../public'), {
+  setHeaders: (res, filePath) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+}));
 
 // Email Open Tracking Route (must run BEFORE /api routing for neat URLs)
 const trackerRouter = require('./routes/tracker');
