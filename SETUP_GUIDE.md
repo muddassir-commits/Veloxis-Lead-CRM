@@ -60,6 +60,10 @@ SMTP_PASS=your_hostinger_email_password_here  # Put your Hostinger email account
 SUPABASE_URL=https://your-project-id.supabase.co  # Replace with Project URL
 SUPABASE_ANON_KEY=your-supabase-anon-key          # Replace with anon/public key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # Replace with service_role key
+
+# WhatsApp Notification API (CallMeBot)
+CALLMEBOT_API_KEY=your_apikey_here                # Your CallMeBot API key
+WHATSAPP_PHONE=+918887620727                      # Your phone number with country code
 ```
 
 ---
@@ -92,7 +96,14 @@ npm run test:email
 ```
 *Verifies connection to Hostinger SMTP. It will prompt/send a test email to muddassir@veloxisglobal.com to verify that Node.js can deliver mail safely through Hostinger.*
 
+### 5. Send a Test WhatsApp Notification
+```bash
+npm run test:whatsapp
+```
+*Verifies connection to the CallMeBot API. It will send a confirmation message to +918887620727 to verify your WhatsApp notification pipeline.*
+
 ---
+
 
 ## 💻 Step 4: Run Locally
 
@@ -132,3 +143,46 @@ Render's free tier sleeps after 15 minutes of inactivity. To prevent this so sch
    - URL: `https://your-render-app-url.onrender.com/api/health`
    - Interval: Every 5 minutes.
 3. Done! UptimeRobot will ping your server regularly, ensuring it stays active and checks cron schedules 24/7.
+
+> [!IMPORTANT]
+> **Why UptimeRobot is critical for Email Open Tracking:**
+> Open tracking uses an invisible 1x1 image pixel pointing to your `BACKEND_URL`. When a recipient opens your email, Gmail's proxy server attempts to fetch the pixel. If your Render instance is asleep, the spin-up delay (~50 seconds) will exceed Gmail's strict proxy timeout (2–5 seconds), causing the open tracking to fail. Keeping the server awake with UptimeRobot ensures that all email opens register in Supabase instantly.
+
+---
+
+## 📱 Step 6: Setting up WhatsApp Notifications (CallMeBot)
+
+To receive your daily outreach and lead generation summary reports directly on Email, Telegram, and WhatsApp at **7:00 PM IST (End-of-Day)**, set up CallMeBot:
+
+1. **Add CallMeBot Contact:** Add the CallMeBot phone number to your contacts:
+   - CallMeBot WhatsApp Number: **`+34 644 81 58 78`** (or click [wa.me/34644815878](https://wa.me/34644815878)).
+
+2. **Request API Key:** Send the following text message to this contact via WhatsApp:
+   - Message: `I allow callmebot to send me messages`
+3. **Receive API Key:** The bot will reply in a few seconds with your API Key (e.g., `123456`).
+4. **Update `.env`:** Copy this key and paste it as `CALLMEBOT_API_KEY` in your `.env` file. Keep `WHATSAPP_PHONE` as `+918887620727`.
+5. **Test the Setup:** Start your server and trigger a manual WhatsApp broadcast or wait for the scheduler tick to verify the message is delivered.
+
+---
+
+## ✈️ Step 7: Setting up Telegram Notifications (Alternative & 100% Reliable)
+
+If WhatsApp is delayed or offline, you can receive your daily reports on Telegram. The CallMeBot Telegram API is highly reliable and does **not** require any API key for personal text messages!
+
+1. **Start the Telegram Bot:**
+   - Search for **`@CallMeBot_txtbot`** on Telegram (or click [t.me/CallMeBot_txtbot](https://t.me/CallMeBot_txtbot)).
+   - Click **Start** or send the command: `/start`
+2. **Configure Your Username:**
+   - Open your [`.env` file](file:///d:/01_Projects/Lead%20CRM/.env).
+   - Set `TELEGRAM_USERNAME` to your Telegram username (including `@`):
+     ```ini
+     TELEGRAM_USERNAME=@your_username
+     ```
+3. **Test the Setup:**
+   - Run the validation script in your terminal:
+     ```bash
+     npm run test:telegram
+     ```
+   - Check your Telegram to verify the alert is received instantly!
+
+

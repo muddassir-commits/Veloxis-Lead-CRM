@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Veloxis Global — Outreach Command Center</title>
-  <meta name="description" content="ROI-driven lead generation and automated cold email outreaching platform for Veloxis Global agency.">
+  <meta name="description"
+    content="ROI-driven lead generation and automated cold email outreaching platform for Veloxis Global agency.">
   <link rel="stylesheet" href="css/styles.css">
   <!-- Lucide Icons for high quality vector glyphs -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body>
 
   <div id="app-container">
-    
+
     <!-- ==========================================
          SIDEBAR NAVIGATION
          ========================================== -->
@@ -26,19 +29,20 @@
           <span>Outreach Hub</span>
         </div>
       </div>
-      
+
       <nav class="sidebar-nav">
         <a class="nav-item active" data-screen="dashboard" id="nav-dashboard">
           <i data-lucide="layout-dashboard"></i>
           <span>Command Center</span>
         </a>
-        <a class="nav-item" data-screen="generator" id="nav-generator">
-          <i data-lucide="search-code"></i>
-          <span>Lead Generator</span>
-        </a>
+
         <a class="nav-item" data-screen="leads" id="nav-leads">
           <i data-lucide="users"></i>
           <span>Lead CRM</span>
+        </a>
+        <a class="nav-item" data-screen="instagram" id="nav-instagram">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 12px; vertical-align: middle;"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
+          <span>Instagram DM CRM</span>
         </a>
         <a class="nav-item" data-screen="templates" id="nav-templates">
           <i data-lucide="file-text"></i>
@@ -47,6 +51,10 @@
         <a class="nav-item" data-screen="sequences" id="nav-sequences">
           <i data-lucide="git-branch"></i>
           <span>Sequence Manager</span>
+        </a>
+        <a class="nav-item" data-screen="sent-mail" id="nav-sent-mail">
+          <i data-lucide="send"></i>
+          <span>Sent Mail</span>
         </a>
         <a class="nav-item" data-screen="planner" id="nav-planner">
           <i data-lucide="calendar"></i>
@@ -65,7 +73,7 @@
           <span>Settings</span>
         </a>
       </nav>
-      
+
       <div class="sidebar-footer">
         <div class="avatar">MA</div>
         <div class="user-info">
@@ -79,7 +87,7 @@
          MAIN CONTENT VIEWPORT
          ========================================== -->
     <main id="main-viewport">
-      
+
       <!-- SCREEN 1: COMMAND CENTER -->
       <section id="screen-dashboard" class="screen active">
         <div class="screen-header">
@@ -88,11 +96,12 @@
             <p>Here is your outreach velocity for today.</p>
           </div>
           <div class="header-actions">
-            <button class="btn btn-secondary" onclick="app.refreshDashboard()"><i data-lucide="refresh-cw"></i> Refresh</button>
-            <button class="btn btn-primary" onclick="app.showScreen('generator')"><i data-lucide="plus"></i> Get Leads</button>
+            <button class="btn btn-secondary" onclick="app.refreshDashboard()"><i data-lucide="refresh-cw"></i>
+              Refresh</button>
+            <button class="btn btn-primary" onclick="app.showScreen('leads'); leads.openAutoGenModal();"><i data-lucide="plus"></i> Get Leads</button>
           </div>
         </div>
-        
+
         <!-- Stat Cards -->
         <div class="stat-grid">
           <div class="card stat-card glow">
@@ -104,7 +113,14 @@
           </div>
           <div class="card stat-card glow">
             <div class="stat-info">
-              <span class="stat-label">Emails Contacted</span>
+              <span class="stat-label">Leads Contacted</span>
+              <span class="stat-value" id="stat-unique-contacted">0</span>
+            </div>
+            <div class="stat-icon success"><i data-lucide="user-check"></i></div>
+          </div>
+          <div class="card stat-card glow">
+            <div class="stat-info">
+              <span class="stat-label">Total Emails Sent</span>
               <span class="stat-value" id="stat-total-sent">0</span>
             </div>
             <div class="stat-icon cyan"><i data-lucide="mail"></i></div>
@@ -114,7 +130,7 @@
               <span class="stat-label">Email Open Rate</span>
               <span class="stat-value" id="stat-open-rate">0%</span>
             </div>
-            <div class="stat-icon success"><i data-lucide="eye"></i></div>
+            <div class="stat-icon primary"><i data-lucide="eye"></i></div>
           </div>
           <div class="card stat-card glow">
             <div class="stat-info">
@@ -124,13 +140,14 @@
             <div class="stat-icon warning"><i data-lucide="message-square"></i></div>
           </div>
         </div>
-        
+
         <div class="section-grid">
           <!-- Funnel / Target Progress -->
           <div class="card glow">
             <h3>Daily Outreach Goals</h3>
-            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Tracking targets according to Hormozi's model.</p>
-            
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Tracking targets according to
+              Hormozi's model.</p>
+
             <div style="display: flex; flex-direction: column; gap: 20px;">
               <div>
                 <div style="display: flex; justify-content: space-between; font-size: 14px;">
@@ -141,191 +158,47 @@
                   <div class="progress-bar-fill" id="progress-email-bar" style="width: 0%"></div>
                 </div>
               </div>
-              
+
               <div>
                 <div style="display: flex; justify-content: space-between; font-size: 14px;">
                   <span>🔗 LinkedIn Connections</span>
                   <span id="progress-linkedin-text">0 / 10 Sent</span>
                 </div>
                 <div class="progress-bar-container">
-                  <div class="progress-bar-fill" id="progress-linkedin-bar" style="width: 0%; background: var(--grad-primary);"></div>
+                  <div class="progress-bar-fill" id="progress-linkedin-bar"
+                    style="width: 0%; background: var(--grad-primary);"></div>
                 </div>
               </div>
-              
+
               <div>
                 <div style="display: flex; justify-content: space-between; font-size: 14px;">
                   <span>📸 Instagram DMs</span>
                   <span id="progress-instagram-text">0 / 30 Sent</span>
                 </div>
                 <div class="progress-bar-container">
-                  <div class="progress-bar-fill" id="progress-instagram-bar" style="width: 0%; background: var(--grad-hot);"></div>
+                  <div class="progress-bar-fill" id="progress-instagram-bar"
+                    style="width: 0%; background: var(--grad-hot);"></div>
                 </div>
               </div>
             </div>
           </div>
-          
+
           <!-- Recent Activity -->
           <div class="card glow">
             <h3>Recent Activity</h3>
-            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Live updates from your sequences.</p>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Live updates from your
+              sequences.</p>
             <div class="activity-feed" id="dashboard-activity-feed">
               <!-- Rendered Dynamically -->
-              <div class="loading-container"><div class="spinner"></div></div>
+              <div class="loading-container">
+                <div class="spinner"></div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- SCREEN 2: LEAD GENERATOR -->
-      <section id="screen-generator" class="screen">
-        <div class="screen-header">
-          <div class="header-title">
-            <h1>Lead Generator</h1>
-            <p>Scrape businesses on Google Maps and find verified emails in 1-Click.</p>
-          </div>
-          <div class="header-actions">
-            <button class="btn btn-secondary" onclick="generator.triggerCSVImport()"><i data-lucide="upload"></i> Upload CSV</button>
-            <input type="file" id="csv-file-input" style="display: none;" accept=".csv">
-          </div>
-        </div>
-        
-        <!-- SOURCE TABS -->
-        <div style="display: flex; gap: 8px; margin-bottom: 16px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 6px; border: 1px solid var(--border-color); width: fit-content;">
-          <button id="tab-btn-maps" class="btn btn-primary" onclick="generator.setSource('maps')" style="padding: 6px 14px; font-size: 12px; border: none; height: 32px;">🗺️ Google Maps Search</button>
-          <button id="tab-btn-social" class="btn btn-secondary" onclick="generator.setSource('social')" style="padding: 6px 14px; font-size: 12px; border: none; height: 32px; background: none;">🔗 Social Search Prospector</button>
-          <button id="tab-btn-apollo" class="btn btn-secondary" onclick="generator.setSource('apollo')" style="padding: 6px 14px; font-size: 12px; border: none; height: 32px; background: none;">⚡ B2B Apollo Search</button>
-        </div>
 
-        <!-- Card 1: Maps Form -->
-        <div class="card" id="card-maps-form">
-          <form id="scraper-form" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: flex-end; margin-bottom: 0;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="scrape-query">Keywords / Business Type</label>
-              <input type="text" id="scrape-query" class="form-control" placeholder="e.g. coaching institutes, real estate agents, gyms">
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="scrape-region">Region / City</label>
-              <input type="text" id="scrape-region" class="form-control" placeholder="e.g. Lucknow, Delhi, London">
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="scrape-limit">Max Results</label>
-              <select id="scrape-limit" class="form-control">
-                <option value="5">5 leads</option>
-                <option value="10" selected>10 leads</option>
-                <option value="20">20 leads</option>
-                <option value="50">50 leads</option>
-              </select>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="height: 42px;"><i data-lucide="search"></i> Scrape Maps</button>
-          </form>
-        </div>
-
-        <!-- Card 2: Social Search Form -->
-        <div class="card" id="card-social-form" style="display: none;">
-          <form id="social-scraper-form" onsubmit="generator.handleSocialScrapeSubmit(event)" style="display: grid; grid-template-columns: 1.2fr 2fr 1.5fr 1fr auto; gap: 15px; align-items: flex-end; margin-bottom: 0;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="social-platform">Social Platform</label>
-              <select id="social-platform" class="form-control">
-                <option value="LinkedIn" selected>🔗 LinkedIn</option>
-                <option value="Instagram">📸 Instagram</option>
-              </select>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="social-query">Niche / Title Keywords</label>
-              <input type="text" id="social-query" class="form-control" placeholder="e.g. CEO, Fitness Coach, Marketing Manager">
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="social-region">Location / City</label>
-              <input type="text" id="social-region" class="form-control" placeholder="e.g. Lucknow, Sydney, London">
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="social-limit">Max Results</label>
-              <select id="social-limit" class="form-control">
-                <option value="5">5 leads</option>
-                <option value="10" selected>10 leads</option>
-                <option value="20">20 leads</option>
-                <option value="50">50 leads</option>
-              </select>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="height: 42px;"><i data-lucide="search"></i> Find Profiles</button>
-          </form>
-        </div>
-
-        <!-- Card 3: B2B Apollo Search Form -->
-        <div class="card" id="card-apollo-form" style="display: none;">
-          <form id="apollo-scraper-form" onsubmit="generator.handleApolloScrapeSubmit(event)" style="display: grid; grid-template-columns: 1.5fr 1.5fr 1.5fr 1fr auto; gap: 15px; align-items: flex-end; margin-bottom: 0;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="apollo-keywords">Niche Keywords</label>
-              <input type="text" id="apollo-keywords" class="form-control" placeholder="e.g. fitness, real estate, SaaS">
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="apollo-titles">Job Titles</label>
-              <input type="text" id="apollo-titles" class="form-control" placeholder="e.g. CEO, Founder, Marketing Director">
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="apollo-regions">Location / City</label>
-              <input type="text" id="apollo-regions" class="form-control" placeholder="e.g. Sydney, Lucknow, London">
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 0;">
-              <label for="apollo-limit">Max Results</label>
-              <select id="apollo-limit" class="form-control">
-                <option value="5">5 leads</option>
-                <option value="10" selected>10 leads</option>
-                <option value="20">20 leads</option>
-                <option value="50">50 leads</option>
-              </select>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="height: 42px;"><i data-lucide="zap"></i> Find Contacts</button>
-          </form>
-        </div>
-        
-        <!-- Scraper Progress / Loader -->
-        <div id="scraper-loading" class="card" style="display: none; justify-content: center; align-items: center; padding: 40px;">
-          <div class="loading-container">
-            <div class="spinner spinner-lg"></div>
-            <p style="margin-top: 15px; font-weight: 600;" id="scraper-loading-text">Launching browser scraper...</p>
-            <p style="font-size: 12px; color: var(--text-muted);">Please hold on, Google Maps searches are being parsed safely via Puppeteer.</p>
-          </div>
-        </div>
-        
-        <!-- Results Table -->
-        <div class="card" id="scraper-results-card" style="display: none;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3>Scraped Businesses (<span id="scraped-count">0</span>)</h3>
-            <button class="btn btn-primary" onclick="generator.importSelectedLeads()"><i data-lucide="download"></i> Import Selected to CRM</button>
-          </div>
-          
-          <div class="table-responsive">
-            <table class="custom-table" id="scraper-results-table">
-              <thead>
-                <tr id="scraper-results-headers">
-                  <th width="40"><input type="checkbox" id="scrape-select-all" checked></th>
-                  <th>Business Name</th>
-                  <th>Website</th>
-                  <th>Phone</th>
-                  <th>Rating</th>
-                  <th>Location</th>
-                  <th>Industry</th>
-                </tr>
-              </thead>
-              <tbody id="scraper-results-body">
-                <!-- Injected via JS -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
 
       <!-- SCREEN 3: LEAD CRM -->
       <section id="screen-leads" class="screen">
@@ -334,18 +207,33 @@
             <h1>Lead CRM</h1>
             <p>Manage prospects, follow up pipelines, and initiate outreaches.</p>
           </div>
-          <div class="header-actions">
-            <button class="btn btn-secondary" onclick="leads.openAddLeadModal()"><i data-lucide="plus"></i> Add Lead</button>
+          <div class="header-actions" style="display: flex; gap: 10px;">
+            <button class="btn btn-primary"
+              onclick="leads.openAutoGenModal()"><i data-lucide="sparkles"></i> Auto-Generate Leads</button>
+            <button class="btn btn-secondary" onclick="leads.openAddLeadModal()"><i data-lucide="plus"></i> Add
+              Lead</button>
+            <button class="btn btn-secondary" onclick="leads.exportToCSV()"><i data-lucide="download"></i> Export to Sheets</button>
           </div>
         </div>
-        
+
         <!-- CRM Filters and Toggles -->
-        <div class="card" style="padding: 16px; display: flex; justify-content: space-between; gap: 15px; flex-wrap: wrap; align-items: center;">
-          <div style="display: flex; gap: 10px; flex-grow: 1; max-width: 600px;">
-            <div class="search-wrapper" style="flex-grow: 1;">
+        <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div
+            style="display: flex; justify-content: space-between; gap: 15px; flex-wrap: wrap; align-items: center; width: 100%;">
+            <div class="search-wrapper" style="flex-grow: 1; max-width: 500px;">
               <i data-lucide="search"></i>
-              <input type="text" id="crm-search" class="form-control" placeholder="Search leads by name, email, website..." oninput="leads.filterLeads()">
+              <input type="text" id="crm-search" class="form-control"
+                placeholder="Search leads by name, email, website..." oninput="leads.filterLeads()">
             </div>
+            <div class="toggle-tabs">
+              <button class="toggle-tab-btn active" id="btn-view-table" onclick="leads.setView('table')"><i
+                  data-lucide="table"></i> Table</button>
+              <button class="toggle-tab-btn" id="btn-view-kanban" onclick="leads.setView('kanban')"><i
+                  data-lucide="columns"></i> Kanban</button>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; width: 100%;">
             <select id="crm-filter-status" class="form-control" style="width: 150px;" onchange="leads.filterLeads()">
               <option value="">All Statuses</option>
               <option value="New">New</option>
@@ -354,21 +242,56 @@
               <option value="Followed Up">Followed Up</option>
               <option value="Replied">Replied</option>
               <option value="Meeting">Meeting</option>
+              <option value="Proposal">Proposal</option>
               <option value="Won">Won</option>
+              <option value="Lost">Lost</option>
             </select>
-          </div>
-          
-          <div class="toggle-tabs">
-            <button class="toggle-tab-btn active" id="btn-view-table" onclick="leads.setView('table')"><i data-lucide="table"></i> Table</button>
-            <button class="toggle-tab-btn" id="btn-view-kanban" onclick="leads.setView('kanban')"><i data-lucide="columns"></i> Kanban</button>
+            <select id="crm-filter-score" class="form-control" style="width: 130px;" onchange="leads.filterLeads()">
+              <option value="">All Scores</option>
+              <option value="Cold">Cold</option>
+              <option value="Warm">Warm</option>
+              <option value="Hot">Hot</option>
+            </select>
+            <select id="crm-filter-industry" class="form-control" style="width: 180px;" onchange="leads.filterLeads()">
+              <option value="">All Industries</option>
+            </select>
+            <select id="crm-filter-city" class="form-control" style="width: 150px;" onchange="leads.filterLeads()">
+              <option value="">All Cities</option>
+            </select>
+            <input type="date" id="crm-filter-date" class="form-control" style="width: 160px;" onchange="leads.filterLeads()" placeholder="Filter by date">
           </div>
         </div>
-        
+
         <!-- Loader -->
-        <div id="crm-loading" class="loading-container"><div class="spinner spinner-lg"></div></div>
-        
+        <div id="crm-loading" class="loading-container">
+          <div class="spinner spinner-lg"></div>
+        </div>
+
         <!-- Table View -->
         <div class="card" id="crm-table-card">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 13px; color: var(--text-secondary);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>Show</span>
+              <select id="crm-page-size" class="form-control" style="width: auto; display: inline-block; padding: 2px 24px 2px 8px; font-size: 12px; height: 28px; vertical-align: middle; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary);" onchange="leads.changePageSize(this.value)">
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="75">75</option>
+                <option value="100">100</option>
+                <option value="all">All</option>
+              </select>
+              <span>leads (Showing <span id="crm-showing-count">0</span> of <span id="crm-total-count">0</span>)</span>
+            </div>
+            <div id="crm-bulk-actions" style="display: none; gap: 10px;">
+              <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;"
+                onclick="leads.bulkEnrich()"><i data-lucide="sparkles"></i> Bulk Find Emails</button>
+              <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;"
+                onclick="leads.bulkStartSequence()"><i data-lucide="play"></i> Bulk Start Sequence</button>
+              <button class="btn btn-danger"
+                style="padding: 6px 12px; font-size: 12px; background: var(--danger); color: #ffffff !important; border: none;"
+                onclick="leads.bulkDelete()"><i data-lucide="trash-2"></i> Bulk Delete</button>
+            </div>
+          </div>
           <div class="table-responsive">
             <table class="custom-table" id="crm-table">
               <thead>
@@ -388,18 +311,115 @@
               </tbody>
             </table>
           </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; font-size: 13px; color: var(--text-secondary);">
-            <span>Showing <span id="crm-showing-count">0</span> leads</span>
-            <div style="display: flex; gap: 10px;" id="crm-bulk-actions" style="display: none;">
-              <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="leads.bulkEnrich()"><i data-lucide="sparkles"></i> Bulk Find Emails</button>
-              <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="leads.bulkStartSequence()"><i data-lucide="play"></i> Bulk Start Sequence</button>
-            </div>
-          </div>
         </div>
-        
+
         <!-- Kanban Board View -->
         <div id="crm-kanban-card" class="kanban-board" style="display: none;">
           <!-- Stage Columns rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- SCREEN: INSTAGRAM DM CRM -->
+      <section id="screen-instagram" class="screen">
+        <div class="screen-header">
+          <div class="header-title">
+            <h1>Instagram DM CRM</h1>
+            <p>Target and DM premium local businesses with custom digital audits.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary" onclick="leads.openAutoGenModal(); document.getElementById('autogen-input-mode').value = 'instagram';"><i data-lucide="sparkles"></i> Auto-Sourcing Profiles</button>
+          </div>
+        </div>
+
+        <div class="section-grid" style="grid-template-columns: 1fr 1.5fr; gap: 20px;">
+          <!-- Left: Instagram Leads List -->
+          <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 15px; height: 75vh; overflow: hidden;">
+            <div class="search-wrapper">
+              <i data-lucide="search"></i>
+              <input type="text" id="ig-search" class="form-control" placeholder="Search Instagram leads..." oninput="instagramOutreach.filterLeads()">
+            </div>
+            
+            <div style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;" id="ig-leads-list">
+              <!-- Injected dynamically -->
+            </div>
+          </div>
+
+          <!-- Right: Instagram Execution Station -->
+          <div class="card" style="display: flex; flex-direction: column; gap: 20px; height: 75vh; overflow-y: auto; background: rgba(14, 15, 23, 0.4); border-color: rgba(255,255,255,0.05);" id="ig-workspace-card">
+            <div id="ig-empty-state" style="text-align: center; color: var(--text-muted); padding: 100px 20px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; color: var(--text-muted);"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
+              <p>Select an Instagram lead from the list to launch the DM workspace.</p>
+            </div>
+            
+            <!-- Lead workspace content (shown dynamically) -->
+            <div id="ig-lead-workspace" style="display: none; flex-direction: column; gap: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+                <div>
+                  <h2 id="ig-workspace-name" style="font-size: 20px; font-weight: 700; margin-bottom: 4px;">Company Name</h2>
+                  <div style="display: flex; gap: 10px; font-size: 13px; color: var(--text-secondary); align-items: center;">
+                    <a id="ig-workspace-handle-link" href="#" target="_blank" style="color: var(--cyan); display: flex; align-items: center; gap: 4px; text-decoration: none;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg> <span id="ig-workspace-handle">@username</span>
+                    </a>
+                    <span>|</span>
+                    <a id="ig-workspace-website-link" href="#" target="_blank" style="color: var(--text-secondary); text-decoration: underline;">
+                      Website
+                    </a>
+                  </div>
+                </div>
+                <div>
+                  <select id="ig-workspace-status" class="form-control" style="width: 150px;" onchange="instagramOutreach.changeStatus(this.value)">
+                    <option value="New">New</option>
+                    <option value="Researched">Researched</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Followed Up">Followed Up</option>
+                    <option value="Replied">Replied</option>
+                    <option value="Won">Won</option>
+                    <option value="Lost">Lost</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Deep Research Audit Card -->
+              <div class="card" style="background: rgba(108, 99, 255, 0.03); border: 1px dashed rgba(108, 99, 255, 0.2); padding: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; border-bottom: 1px dashed rgba(108, 99, 255, 0.15); padding-bottom: 8px;">
+                  <i data-lucide="microscope" style="color: var(--cyan); width: 16px; height: 16px;"></i>
+                  <span style="font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--cyan);">Instagram Deep Research Audit</span>
+                </div>
+                <div id="ig-workspace-research" style="white-space: pre-wrap; font-size: 13px; font-family: monospace; color: var(--text-secondary); line-height: 1.6;">
+                  No audit report generated for this lead.
+                </div>
+              </div>
+
+              <!-- DM Dispatch Panel -->
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <h3>DM Dispatch Station</h3>
+                <div class="form-group">
+                  <label for="ig-select-template">Select Instagram Template</label>
+                  <select id="ig-select-template" class="form-control" onchange="instagramOutreach.handleTemplateChange()">
+                    <!-- Templates dynamically loaded -->
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="ig-workspace-body">Message Body</label>
+                  <textarea id="ig-workspace-body" class="form-control" rows="8" style="font-size: 13px; line-height: 1.5;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                  <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="instagramOutreach.copyMessage()"><i data-lucide="copy"></i> Copy Message</button>
+                  <button type="button" class="btn btn-primary" style="flex: 1.5; background: var(--grad-hot); border: none;" onclick="instagramOutreach.launchInstagramProfile()"><i data-lucide="external-link"></i> Copy & Open IG Profile</button>
+                </div>
+              </div>
+
+              <!-- Outreach History timeline -->
+              <div style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 10px;">
+                <h4 style="font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;">Outreach Activity Log</h4>
+                <div id="ig-workspace-history" style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--text-secondary);">
+                  <!-- History injected dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -411,16 +431,32 @@
             <p>Hormozi-structured templates for different channels and stages.</p>
           </div>
           <div class="header-actions">
-            <button class="btn btn-primary" onclick="templates.openCreateModal()"><i data-lucide="plus"></i> New Template</button>
+            <button class="btn btn-primary" onclick="templates.openCreateModal()"><i data-lucide="plus"></i> New
+              Template</button>
           </div>
         </div>
-        
+
         <div class="toggle-tabs" style="margin-bottom: 15px;">
-          <button class="toggle-tab-btn active" id="btn-temp-email" onclick="templates.setType('Email')"><i data-lucide="mail"></i> Cold Email (8)</button>
-          <button class="toggle-tab-btn" id="btn-temp-linkedin" onclick="templates.setType('LinkedIn')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg> LinkedIn (5)</button>
-          <button class="toggle-tab-btn" id="btn-temp-instagram" onclick="templates.setType('Instagram')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg> Instagram (4)</button>
+          <button class="toggle-tab-btn active" id="btn-temp-email" onclick="templates.setType('Email')"><i
+              data-lucide="mail"></i> Cold Email (8)</button>
+          <button class="toggle-tab-btn" id="btn-temp-linkedin" onclick="templates.setType('LinkedIn')"><svg
+              xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              style="vertical-align:middle;margin-right:4px;">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+              <rect width="4" height="12" x="2" y="9" />
+              <circle cx="4" cy="4" r="2" />
+            </svg> LinkedIn (5)</button>
+          <button class="toggle-tab-btn" id="btn-temp-instagram" onclick="templates.setType('Instagram')"><svg
+              xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              style="vertical-align:middle;margin-right:4px;">
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+              <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+            </svg> Instagram (4)</button>
         </div>
-        
+
         <div class="template-grid" id="templates-container">
           <!-- Rendered dynamically -->
         </div>
@@ -434,13 +470,15 @@
             <p>Monitor active multi-step email campaigns running 24/7 in the cloud.</p>
           </div>
         </div>
-        
+
         <div class="card">
           <div class="table-responsive">
             <table class="custom-table">
               <thead>
                 <tr>
                   <th>Lead Name</th>
+                  <th>Company</th>
+                  <th>Email</th>
                   <th>Current Step</th>
                   <th>Status</th>
                   <th>Last Sent</th>
@@ -456,6 +494,44 @@
         </div>
       </section>
 
+      <!-- SCREEN: SENT MAIL -->
+      <section id="screen-sent-mail" class="screen">
+        <div class="screen-header">
+          <div class="header-title">
+            <h1>Sent Mail</h1>
+            <p>Gmail-style archive of outreach emails dispatched to prospects.</p>
+          </div>
+        </div>
+
+        <div class="section-grid" style="grid-template-columns: 1fr 1.5fr; gap: 20px;">
+          <!-- Left: Email List -->
+          <div class="card"
+            style="padding: 16px; display: flex; flex-direction: column; gap: 15px; height: 75vh; overflow: hidden;">
+            <div class="search-wrapper">
+              <i data-lucide="search"></i>
+              <input type="text" id="sent-search" class="form-control" placeholder="Search sent emails..."
+                oninput="sentMail.filterEmails()">
+            </div>
+
+            <div style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"
+              id="sent-email-list">
+              <!-- Injected dynamically -->
+            </div>
+          </div>
+
+          <!-- Right: Email Detail View -->
+          <div class="card"
+            style="display: flex; flex-direction: column; gap: 20px; height: 75vh; overflow-y: auto; background: rgba(14, 15, 23, 0.4); border-color: rgba(255,255,255,0.05);"
+            id="sent-email-detail">
+            <div style="text-align: center; color: var(--text-muted); padding: 100px 20px;">
+              <i data-lucide="mail-open"
+                style="width: 48px; height: 48px; margin-bottom: 15px; stroke-width: 1.5; color: var(--text-muted);"></i>
+              <p>Select an email from the list to view the full sent message body.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- SCREEN 6: WEEKLY PLANNER -->
       <section id="screen-planner" class="screen">
         <div class="screen-header">
@@ -464,7 +540,7 @@
             <p>Daily breakdown of automated sends and manual connection lists.</p>
           </div>
         </div>
-        
+
         <div class="planner-grid" id="planner-calendar-grid">
           <!-- Injected dynamically for Mon-Sat -->
         </div>
@@ -478,80 +554,123 @@
             <p>Lock in your Ideal Customer Profile targets to optimize Google Maps leads.</p>
           </div>
         </div>
-        
+
         <div class="section-grid">
           <div class="card glow">
             <h3 style="margin-bottom: 20px;">Target Definition Form</h3>
-            
+
             <form id="icp-form" style="display: flex; flex-direction: column; gap: 20px;" onsubmit="icp.saveICP(event)">
               <input type="hidden" id="icp-id">
-              
+
               <div class="form-group">
                 <label>Target Industries</label>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="Education / Coaching" checked> 🎓 Education & Coaching</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="Real Estate" checked> 🏠 Real Estate Developers</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="E-commerce" checked> 🛒 E-commerce / D2C</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="Gyms / Fitness" checked> 💪 Gyms & Fitness</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="Clinics / Healthcare"> 🏥 Healthcare / Clinics</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries" value="B2B / MSME"> 🏭 MSMEs / Manufactures</label>
+                <div
+                  style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries"
+                      value="Real Estate Developer" checked> 🏠 Real Estate Agencies</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries"
+                      value="Gyms" checked> 💪 Gyms & Fitness Centers</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries"
+                      value="Dentist" checked> 🦷 Dental & Medical Clinics</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries"
+                      value="MedSpa" checked> 🏥 Plastic Surgeons & MedSpas</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries"
+                      value="Roofing Contractor"> 🏠 Roofers & Contractors</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries"
+                      value="Solar Installer"> ☀️ Solar Energy Companies</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries"
+                      value="HVAC Contractor"> ❄️ HVAC & Home Services</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries"
+                      value="E-commerce Store" checked> 🛒 E-Commerce Brands</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries"
+                      value="Software Agency" checked> 💻 Marketing & Software Agencies</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries"
+                      value="Coaches & Consultants"> 🤝 Coaches & Consultants</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-industries"
+                      value="Education / Coaching" checked> 🎓 Educational Institutes</label>
                 </div>
               </div>
-              
+
               <div class="form-group">
                 <label>Geographic Markets</label>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions" value="India" checked> 🇮🇳 India (Domestic)</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions" value="USA" checked> 🇺🇸 United States</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions" value="UK" checked> 🇬🇧 United Kingdom</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions" value="Singapore" checked> 🇸🇬 Singapore</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions" value="Australia" checked> 🇦🇺 Australia</label>
+                <div
+                  style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions"
+                      value="North America" checked> 🌎 North America (USA, CA)</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions"
+                      value="Europe" checked> 🌍 Europe (UK, DE, FR, ES, IT)</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions"
+                      value="Asia" checked> 🌏 Asia (IN, UAE, SG, JP, SA)</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions"
+                      value="Oceania" checked> 🐨 Oceania (AU, NZ)</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions"
+                      value="South America"> 💃 South America (BR, AR)</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-regions"
+                      value="Africa"> 🦁 Africa (ZA, EG, NG)</label>
                 </div>
               </div>
 
               <div class="form-group">
                 <label>Decision Maker Titles</label>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles" value="Founder" checked> Founder</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles" value="Owner" checked> Owner</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles" value="CEO" checked> CEO</label>
-                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles" value="Marketing Manager"> Marketing Manager</label>
+                <div
+                  style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles"
+                      value="Founder" checked> Founder</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles"
+                      value="Owner" checked> Owner</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles"
+                      value="CEO" checked> CEO</label>
+                  <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" name="icp-roles"
+                      value="Marketing Manager"> Marketing Manager</label>
                 </div>
               </div>
 
-              <button type="submit" class="btn btn-primary" style="align-self: flex-start;"><i data-lucide="save"></i> Save Target Profile</button>
+              <button type="submit" class="btn btn-primary" style="align-self: flex-start;"><i data-lucide="save"></i>
+                Save Target Profile</button>
             </form>
           </div>
-          
+
           <!-- ICP Visual Card -->
-          <div class="card glow" style="display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgba(20, 22, 37, 0.95), rgba(108, 99, 255, 0.05)); border-color: rgba(108, 99, 255, 0.25);">
+          <div class="card glow"
+            style="display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, rgba(20, 22, 37, 0.95), rgba(108, 99, 255, 0.05)); border-color: rgba(108, 99, 255, 0.25);">
             <div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                <span style="font-size: 11px; text-transform:uppercase; color: var(--cyan); font-weight:700; letter-spacing:0.1em;">Target Matrix</span>
+                <span
+                  style="font-size: 11px; text-transform:uppercase; color: var(--cyan); font-weight:700; letter-spacing:0.1em;">Target
+                  Matrix</span>
                 <i data-lucide="fingerprint" style="color: var(--cyan);"></i>
               </div>
-              <h2 id="icp-card-name" style="font-size: 24px; font-weight:800; margin-bottom: 10px;">Veloxis High-Ticket ICP</h2>
-              <p style="color: var(--text-secondary); font-size:13px; line-height: 1.6;">Locked configuration used by the web scraping client to filter search directories.</p>
-              
+              <h2 id="icp-card-name" style="font-size: 24px; font-weight:800; margin-bottom: 10px;">Veloxis High-Ticket
+                ICP</h2>
+              <p style="color: var(--text-secondary); font-size:13px; line-height: 1.6;">Locked configuration used by
+                the web scraping client to filter search directories.</p>
+
               <div style="margin-top: 30px; display:flex; flex-direction:column; gap:15px;">
                 <div>
-                  <h4 style="font-size: 11px; text-transform:uppercase; color: var(--text-muted); margin-bottom:4px;">Target Verticals</h4>
+                  <h4 style="font-size: 11px; text-transform:uppercase; color: var(--text-muted); margin-bottom:4px;">
+                    Target Verticals</h4>
                   <div style="display:flex; flex-wrap:wrap; gap:6px;" id="icp-view-industries"></div>
                 </div>
                 <div>
-                  <h4 style="font-size: 11px; text-transform:uppercase; color: var(--text-muted); margin-bottom:4px;">Target Markets</h4>
+                  <h4 style="font-size: 11px; text-transform:uppercase; color: var(--text-muted); margin-bottom:4px;">
+                    Target Markets</h4>
                   <div style="display:flex; flex-wrap:wrap; gap:6px;" id="icp-view-regions"></div>
                 </div>
                 <div>
-                  <h4 style="font-size: 11px; text-transform:uppercase; color: var(--text-muted); margin-bottom:4px;">Decision Makers</h4>
+                  <h4 style="font-size: 11px; text-transform:uppercase; color: var(--text-muted); margin-bottom:4px;">
+                    Decision Makers</h4>
                   <div style="display:flex; flex-wrap:wrap; gap:6px;" id="icp-view-roles"></div>
                 </div>
               </div>
             </div>
-            
-            <div style="border-top: 1px solid var(--border-color); padding-top:20px; margin-top: 30px; display:flex; align-items:center; gap:12px;">
-              <div style="background:var(--cyan-glow); color:var(--cyan); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center;"><i data-lucide="check" style="width:16px;height:16px;"></i></div>
-              <span style="font-size:12px; font-weight:600; color: var(--text-secondary);">ICP logic actively filters Google Maps results</span>
+
+            <div
+              style="border-top: 1px solid var(--border-color); padding-top:20px; margin-top: 30px; display:flex; align-items:center; gap:12px;">
+              <div
+                style="background:var(--cyan-glow); color:var(--cyan); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
+                <i data-lucide="check" style="width:16px;height:16px;"></i></div>
+              <span style="font-size:12px; font-weight:600; color: var(--text-secondary);">ICP logic actively filters
+                Google Maps results</span>
             </div>
           </div>
         </div>
@@ -565,32 +684,35 @@
             <p>Track your campaign metrics, outreach velocity, and email open metrics.</p>
           </div>
         </div>
-        
+
         <div class="section-grid">
           <!-- Main Chart -->
           <div class="card glow">
             <h3>Outreach Volume Trends</h3>
-            <p style="color: var(--text-secondary); font-size: 13px;">Historical timeline logs of email outreaches dispatched.</p>
+            <p style="color: var(--text-secondary); font-size: 13px;">Historical timeline logs of email outreaches
+              dispatched.</p>
             <div class="chart-container" id="analytics-timeline-container">
               <!-- SVG chart rendered dynamically -->
             </div>
           </div>
-          
+
           <!-- Pipeline Funnel -->
           <div class="card glow">
             <h3>Pipeline Stages</h3>
-            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Visual flow of lead conversions.</p>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Visual flow of lead
+              conversions.</p>
             <div class="funnel-list" id="analytics-funnel-list">
               <!-- Rendered dynamically -->
             </div>
           </div>
         </div>
-        
+
         <div class="section-grid" style="grid-template-columns: repeat(2, 1fr);">
           <!-- Template Performance -->
           <div class="card glow">
             <h3>Template Response Rates</h3>
-            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Open volume tracking per outreach template.</p>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Open volume tracking per
+              outreach template.</p>
             <div class="table-responsive">
               <table class="custom-table" id="analytics-templates-table">
                 <thead>
@@ -606,11 +728,12 @@
               </table>
             </div>
           </div>
-          
+
           <!-- Geographical Leads -->
           <div class="card glow">
             <h3>Top Target Industries</h3>
-            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Distribution of leads by category.</p>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Distribution of leads by
+              category.</p>
             <div class="funnel-list" id="analytics-industries-list">
               <!-- Rendered dynamically -->
             </div>
@@ -626,21 +749,26 @@
             <p>Configure Hostinger SMTP connections, daily outreach quotas, and your signature.</p>
           </div>
         </div>
-        
+
         <div class="section-grid">
           <div class="card glow">
             <h3>System Status</h3>
             <div style="display:flex; flex-direction:column; gap:15px; margin-top:20px;">
-              <div style="display:flex; justify-content:space-between; padding:12px; background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:8px;">
+              <div
+                style="display:flex; justify-content:space-between; padding:12px; background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:8px;">
                 <span style="font-weight:600;">Hostinger SMTP Connection</span>
-                <span id="settings-smtp-status" style="font-weight:600; color:var(--text-muted);"><i class="spinner" style="display:inline-block; vertical-align:middle; width:14px; height:14px;"></i> Checking...</span>
+                <span id="settings-smtp-status" style="font-weight:600; color:var(--text-muted);"><i class="spinner"
+                    style="display:inline-block; vertical-align:middle; width:14px; height:14px;"></i>
+                  Checking...</span>
               </div>
-              <button class="btn btn-secondary" onclick="settings.testSMTP()"><i data-lucide="send"></i> Test SMTP Link</button>
+              <button class="btn btn-secondary" onclick="settings.testSMTP()"><i data-lucide="send"></i> Test SMTP
+                Link</button>
             </div>
-            
+
             <div style="border-top:1px solid var(--border-color); margin-top:25px; padding-top:25px;">
               <h3>Timezone & Allowed Schedule</h3>
-              <form id="settings-schedule-form" style="margin-top:15px; display:flex; flex-direction:column; gap:15px;" onsubmit="settings.saveSchedule(event)">
+              <form id="settings-schedule-form" style="margin-top:15px; display:flex; flex-direction:column; gap:15px;"
+                onsubmit="settings.saveSchedule(event)">
                 <div style="display:flex; gap:15px;">
                   <div class="form-group" style="flex:1;">
                     <label>Start Hour (9 = 9 AM)</label>
@@ -653,34 +781,47 @@
                 </div>
                 <div class="form-group">
                   <label>Sending Days (Checked = Active)</label>
-                  <div style="display:flex; flex-wrap:wrap; gap:10px; background:rgba(0,0,0,0.15); padding:10px; border-radius:6px;">
-                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="1" checked> Mon</label>
-                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="2" checked> Tue</label>
-                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="3" checked> Wed</label>
-                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="4" checked> Thu</label>
-                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="5" checked> Fri</label>
-                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="6" checked> Sat</label>
-                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days" value="0"> Sun</label>
+                  <div
+                    style="display:flex; flex-wrap:wrap; gap:10px; background:rgba(0,0,0,0.15); padding:10px; border-radius:6px;">
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days"
+                        value="1" checked> Mon</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days"
+                        value="2" checked> Tue</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days"
+                        value="3" checked> Wed</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days"
+                        value="4" checked> Thu</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days"
+                        value="5" checked> Fri</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days"
+                        value="6" checked> Sat</label>
+                    <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" name="schedule-days"
+                        value="0"> Sun</label>
                   </div>
                 </div>
-                <button type="submit" class="btn btn-primary" style="align-self: flex-start;"><i data-lucide="save"></i> Save Schedule</button>
+                <button type="submit" class="btn btn-primary" style="align-self: flex-start;"><i data-lucide="save"></i>
+                  Save Schedule</button>
               </form>
             </div>
           </div>
-          
+
           <div class="card glow">
             <h3>Email Signature</h3>
-            <p style="color:var(--text-secondary); font-size:12px; margin-top:4px; margin-bottom:15px;">This will append to the {{signature}} tag in email sequences.</p>
+            <p style="color:var(--text-secondary); font-size:12px; margin-top:4px; margin-bottom:15px;">This will append
+              to the {{signature}} tag in email sequences.</p>
             <form id="settings-signature-form" onsubmit="settings.saveSignature(event)">
               <div class="form-group">
-                <textarea id="settings-signature" class="form-control" rows="8" style="font-family: monospace; font-size: 13px;" required></textarea>
+                <textarea id="settings-signature" class="form-control" rows="8"
+                  style="font-family: monospace; font-size: 13px;" required></textarea>
               </div>
-              <button type="submit" class="btn btn-primary" style="margin-top:15px;"><i data-lucide="save"></i> Save Signature</button>
+              <button type="submit" class="btn btn-primary" style="margin-top:15px;"><i data-lucide="save"></i> Save
+                Signature</button>
             </form>
-            
+
             <div style="border-top:1px solid var(--border-color); margin-top:25px; padding-top:25px;">
               <h3>Daily Quota Limits</h3>
-              <form id="settings-limits-form" style="margin-top:15px; display:flex; flex-direction:column; gap:15px;" onsubmit="settings.saveLimits(event)">
+              <form id="settings-limits-form" style="margin-top:15px; display:flex; flex-direction:column; gap:15px;"
+                onsubmit="settings.saveLimits(event)">
                 <div class="form-group">
                   <label>Daily Email Outreach limit</label>
                   <input type="number" id="limit-email" class="form-control" value="100">
@@ -693,21 +834,29 @@
                   <label>Daily Instagram DM limit</label>
                   <input type="number" id="limit-instagram" class="form-control" value="30">
                 </div>
-                <button type="submit" class="btn btn-primary" style="align-self: flex-start;"><i data-lucide="save"></i> Save Limits</button>
+                <button type="submit" class="btn btn-primary" style="align-self: flex-start;"><i data-lucide="save"></i>
+                  Save Limits</button>
               </form>
             </div>
           </div>
 
           <!-- Danger Zone Card -->
-          <div class="card glow" style="border-color: rgba(239, 68, 68, 0.2); background: linear-gradient(135deg, rgba(20, 22, 37, 0.95), rgba(239, 68, 68, 0.02)); grid-column: span 1;">
-            <h3 style="color: var(--danger); display: flex; align-items: center; gap: 8px;"><i data-lucide="shield-alert" style="width: 18px; height: 18px;"></i> Danger Zone</h3>
-            <p style="color: var(--text-secondary); font-size: 13px; margin-top: 5px; margin-bottom: 20px;">Permanent actions that reset outreach pipelines.</p>
-            
+          <div class="card glow"
+            style="border-color: rgba(239, 68, 68, 0.2); background: linear-gradient(135deg, rgba(20, 22, 37, 0.95), rgba(239, 68, 68, 0.02)); grid-column: span 1;">
+            <h3 style="color: var(--danger); display: flex; align-items: center; gap: 8px;"><i
+                data-lucide="shield-alert" style="width: 18px; height: 18px;"></i> Danger Zone</h3>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-top: 5px; margin-bottom: 20px;">Permanent
+              actions that reset outreach pipelines.</p>
+
             <div style="display:flex; flex-direction:column; gap:15px;">
-              <div style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-secondary);">
-                <strong>Clean CRM Data:</strong> This will delete all prospects/leads, active sequences, tracking logs, and outreach history from the database. Default settings and outreach templates will remain intact.
+              <div
+                style="background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--text-secondary);">
+                <strong>Clean CRM Data:</strong> This will delete all prospects/leads, active sequences, tracking logs,
+                and outreach history from the database. Default settings and outreach templates will remain intact.
               </div>
-              <button class="btn btn-danger" onclick="settings.clearCRMData()" style="align-self: flex-start; gap: 8px;"><i data-lucide="trash-2"></i> Reset CRM & Clear Test Data</button>
+              <button class="btn btn-danger" onclick="settings.clearCRMData()"
+                style="align-self: flex-start; gap: 8px;"><i data-lucide="trash-2"></i> Reset CRM & Clear Test
+                Data</button>
             </div>
           </div>
 
@@ -790,7 +939,8 @@
           </div>
           <div class="form-group">
             <label for="lead-input-industry">Industry / Category</label>
-            <input type="text" id="lead-input-industry" class="form-control" placeholder="e.g. Gym, Coaching Institute, Real Estate">
+            <input type="text" id="lead-input-industry" class="form-control"
+              placeholder="e.g. Gym, Coaching Institute, Real Estate">
           </div>
           <div class="form-group">
             <label for="lead-input-notes">Notes</label>
@@ -817,7 +967,8 @@
         <div class="modal-body">
           <div class="form-group">
             <label for="temp-input-name">Template Name *</label>
-            <input type="text" id="temp-input-name" class="form-control" required placeholder="e.g. Email 1: The Diagnosis">
+            <input type="text" id="temp-input-name" class="form-control" required
+              placeholder="e.g. Email 1: The Diagnosis">
           </div>
           <div style="display:flex; gap:15px;">
             <div class="form-group" style="flex:1;">
@@ -835,11 +986,14 @@
           </div>
           <div class="form-group" id="temp-subject-group">
             <label for="temp-input-subject">Subject Line *</label>
-            <input type="text" id="temp-input-subject" class="form-control" placeholder="e.g. quick question about {{company}}">
+            <input type="text" id="temp-input-subject" class="form-control"
+              placeholder="e.g. quick question about {{company}}">
           </div>
           <div class="form-group">
             <label for="temp-input-body">Message Body *</label>
-            <textarea id="temp-input-body" class="form-control" rows="8" placeholder="Use placeholders like {{name}}, {{company}}, {{website}}, {{signature}}..." required></textarea>
+            <textarea id="temp-input-body" class="form-control" rows="8"
+              placeholder="Use placeholders like {{name}}, {{company}}, {{website}}, {{signature}}..."
+              required></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -859,24 +1013,36 @@
       </div>
       <form id="outreach-manual-form" onsubmit="leads.submitManualOutreach(event)">
         <div class="modal-body" style="display: flex; flex-direction: column; gap: 15px;">
-          
+
           <!-- Channel selector buttons -->
           <div class="form-group">
             <label>Outreach Channel</label>
-            <div style="display: flex; gap: 10px; background: rgba(0,0,0,0.15); padding: 5px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content;">
-              <button type="button" id="outreach-btn-email" class="btn btn-primary" onclick="leads.setOutreachChannel('Email')" style="border: none; padding: 6px 16px; font-size: 13px; height: 32px;">📧 Email</button>
-              <button type="button" id="outreach-btn-linkedin" class="btn btn-secondary" onclick="leads.setOutreachChannel('LinkedIn')" style="border: none; padding: 6px 16px; font-size: 13px; height: 32px; background: none;">🔗 LinkedIn</button>
-              <button type="button" id="outreach-btn-instagram" class="btn btn-secondary" onclick="leads.setOutreachChannel('Instagram')" style="border: none; padding: 6px 16px; font-size: 13px; height: 32px; background: none;">📸 Instagram</button>
+            <div
+              style="display: flex; gap: 10px; background: rgba(0,0,0,0.15); padding: 5px; border-radius: 8px; border: 1px solid var(--border-color); width: fit-content;">
+              <button type="button" id="outreach-btn-email" class="btn btn-primary"
+                onclick="leads.setOutreachChannel('Email')"
+                style="border: none; padding: 6px 16px; font-size: 13px; height: 32px;">📧 Email</button>
+              <button type="button" id="outreach-btn-linkedin" class="btn btn-secondary"
+                onclick="leads.setOutreachChannel('LinkedIn')"
+                style="border: none; padding: 6px 16px; font-size: 13px; height: 32px; background: none;">🔗
+                LinkedIn</button>
+              <button type="button" id="outreach-btn-instagram" class="btn btn-secondary"
+                onclick="leads.setOutreachChannel('Instagram')"
+                style="border: none; padding: 6px 16px; font-size: 13px; height: 32px; background: none;">📸
+                Instagram</button>
             </div>
           </div>
 
           <!-- Lead Info Indicator -->
-          <div id="outreach-lead-info" style="font-size: 12px; color: var(--text-secondary); background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
-            Prospect: <strong id="outreach-lead-name" style="color: var(--text);">...</strong> | Company: <strong id="outreach-lead-company" style="color: var(--text);">...</strong>
+          <div id="outreach-lead-info"
+            style="font-size: 12px; color: var(--text-secondary); background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+            Prospect: <strong id="outreach-lead-name" style="color: var(--text);">...</strong> | Company: <strong
+              id="outreach-lead-company" style="color: var(--text);">...</strong>
           </div>
 
           <!-- Warnings if Channel Credentials missing -->
-          <div id="outreach-channel-warning" style="display: none; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: normal; text-align: left; background: rgba(239,68,68,0.1); border: 1px solid var(--danger); color: #f87171;">
+          <div id="outreach-channel-warning"
+            style="display: none; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: normal; text-align: left; background: rgba(239,68,68,0.1); border: 1px solid var(--danger); color: #f87171;">
             <!-- Dynamic warnings -->
           </div>
 
@@ -892,7 +1058,8 @@
           <!-- Recipient email -->
           <div class="form-group" id="outreach-email-group">
             <label for="outreach-input-to">Recipient Email</label>
-            <input type="email" id="outreach-input-to" class="form-control" readonly placeholder="No email associated with lead">
+            <input type="email" id="outreach-input-to" class="form-control" readonly
+              placeholder="No email associated with lead">
           </div>
 
           <!-- Subject (only for Email) -->
@@ -909,21 +1076,213 @@
 
           <!-- Action buttons for social platform copy/launch -->
           <div style="display: flex; gap: 10px; margin-top: 5px;" id="outreach-social-actions">
-            <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="leads.copyOutreachMessage()"><i data-lucide="copy"></i> Copy Message</button>
-            <button type="button" id="outreach-btn-launch" class="btn btn-secondary" style="flex: 1; color: var(--cyan);" onclick="leads.launchSocialProfile()"><i data-lucide="external-link"></i> Open Profile & Send</button>
+            <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="leads.copyOutreachMessage()"><i
+                data-lucide="copy"></i> Copy Message</button>
+            <button type="button" id="outreach-btn-launch" class="btn btn-secondary"
+              style="flex: 1; color: var(--cyan);" onclick="leads.launchSocialProfile()"><i
+                data-lucide="external-link"></i> Open Profile & Send</button>
           </div>
         </div>
         <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 6px;">
-            <input type="checkbox" id="outreach-log-history" checked style="width: 15px; height: 15px; cursor: pointer;">
-            <label for="outreach-log-history" style="font-size: 12px; margin-bottom: 0; cursor: pointer; color: var(--text-secondary);">Log outreach event in CRM timeline</label>
+            <input type="checkbox" id="outreach-log-history" checked
+              style="width: 15px; height: 15px; cursor: pointer;">
+            <label for="outreach-log-history"
+              style="font-size: 12px; margin-bottom: 0; cursor: pointer; color: var(--text-secondary);">Log outreach
+              event in CRM timeline</label>
           </div>
           <div style="display: flex; gap: 10px;">
             <button type="button" class="btn btn-secondary" onclick="leads.closeOutreachModal()">Close</button>
-            <button type="submit" id="outreach-btn-submit" class="btn btn-primary"><i data-lucide="send"></i> Dispatch Email</button>
+            <button type="submit" id="outreach-btn-submit" class="btn btn-primary"><i data-lucide="send"></i> Dispatch
+              Email</button>
           </div>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- 4. Lead Auto-Generation Options Modal -->
+  <div class="modal-overlay" id="modal-auto-gen">
+    <div class="modal-card" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3>Auto-Generate Leads</h3>
+        <button class="btn btn-secondary btn-icon" onclick="leads.closeAutoGenModal()"><i data-lucide="x"></i></button>
+      </div>
+      <form id="modal-auto-gen-form" onsubmit="leads.startAutoGen(event)">
+        <div class="modal-body">
+          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">
+            Trigger our 5-layer Puppeteer lead generator directly. This will scrape local maps directory, discover
+            verified emails, and enqueue prospects in active email campaigns.
+          </p>
+          
+          <!-- Live Real-Time Recommendations -->
+          <div class="card" id="autogen-recommendation-card" style="background: rgba(108, 99, 255, 0.08); border: 1px dashed rgba(108, 99, 255, 0.3); padding: 14px; margin-bottom: 15px; border-radius: var(--radius-md); text-align: left;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <i data-lucide="sparkles" style="color: var(--cyan); width: 16px; height: 16px;"></i>
+              <span style="font-size: 11px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em;">Live Outreach Recommendation</span>
+            </div>
+            <div id="autogen-recommendation-content" style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+              Calculating active timezones...
+            </div>
+          <div class="form-group">
+            <label for="autogen-input-mode">Sourcing Mode *</label>
+            <select id="autogen-input-mode" class="form-control" required>
+              <option value="email" selected>📧 Email Sourcing (Google Maps + Web Scan)</option>
+              <option value="instagram">📸 Instagram Sourcing (DuckDuckGo + IG Bios)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="autogen-input-industry">Target Industry *</label>
+            <select id="autogen-input-industry" class="form-control" required>
+              <option value="Real Estate Developer" selected>Real Estate Agencies & Developers</option>
+              <option value="Gyms">Gyms & Fitness Centers</option>
+              <option value="Dentist">Dental Clinics & Dentists</option>
+              <option value="MedSpa">Plastic Surgeons & MedSpas</option>
+              <option value="Chiropractor">Chiropractors & Physiotherapists</option>
+              <option value="Roofing Contractor">Roofers & Roofing Contractors</option>
+              <option value="Solar Installer">Solar Installation Companies</option>
+              <option value="HVAC Contractor">HVAC & Home Services Contractors</option>
+              <option value="E-commerce Store">E-Commerce Brands & Shopify Stores</option>
+              <option value="Software Agency">Digital Marketing & Software Agencies</option>
+              <option value="Law Firm">Law Firms & Attorneys</option>
+              <option value="Mortgage Broker">Mortgage Brokers & Loan Officers</option>
+              <option value="Financial Advisor">Financial Advisors & Wealth Managers</option>
+              <option value="Coaches & Consultants">Business & Life Coaches / Consultants</option>
+              <option value="Education / Coaching">Educational & Coaching Institutes</option>
+              <option value="Beauty Salon">Beauty & Hair Salons</option>
+              <option value="Home Remodeling">Home Remodeling & Construction</option>
+              <option value="Cleaning Services">Cleaning Services (Commercial/Residential)</option>
+              <option value="Car Dealership">Car Dealerships & Auto Detailing</option>
+              <option value="Restaurant">Local Restaurants & Cafes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="autogen-input-city">Target City / Region *</label>
+            <select id="autogen-input-city" class="form-control" required>
+              <optgroup label="North America — USA">
+                <option value="New York" selected>New York, USA</option>
+                <option value="Los Angeles">Los Angeles, USA</option>
+                <option value="Chicago">Chicago, USA</option>
+                <option value="Houston">Houston, USA</option>
+                <option value="Miami">Miami, USA</option>
+                <option value="San Francisco">San Francisco, USA</option>
+                <option value="Dallas">Dallas, USA</option>
+                <option value="Austin">Austin, USA</option>
+                <option value="Seattle">Seattle, USA</option>
+                <option value="Boston">Boston, USA</option>
+                <option value="Atlanta">Atlanta, USA</option>
+                <option value="Denver">Denver, USA</option>
+              </optgroup>
+              <optgroup label="North America — Canada">
+                <option value="Toronto">Toronto, Canada</option>
+                <option value="Vancouver">Vancouver, Canada</option>
+                <option value="Montreal">Montreal, Canada</option>
+                <option value="Calgary">Calgary, Canada</option>
+              </optgroup>
+              <optgroup label="Europe — United Kingdom">
+                <option value="London">London, UK</option>
+                <option value="Manchester">Manchester, UK</option>
+                <option value="Birmingham">Birmingham, UK</option>
+                <option value="Edinburgh">Edinburgh, UK</option>
+              </optgroup>
+              <optgroup label="Europe — Germany">
+                <option value="Berlin">Berlin, Germany</option>
+                <option value="Munich">Munich, Germany</option>
+                <option value="Frankfurt">Frankfurt, Germany</option>
+                <option value="Hamburg">Hamburg, Germany</option>
+              </optgroup>
+              <optgroup label="Europe — France">
+                <option value="Paris">Paris, France</option>
+                <option value="Lyon">Lyon, France</option>
+                <option value="Marseille">Marseille, France</option>
+              </optgroup>
+              <optgroup label="Europe — Spain & Italy">
+                <option value="Madrid">Madrid, Spain</option>
+                <option value="Barcelona">Barcelona, Spain</option>
+                <option value="Rome">Rome, Italy</option>
+                <option value="Milan">Milan, Italy</option>
+              </optgroup>
+              <optgroup label="Asia — India">
+                <option value="Gurgaon">Gurgaon, India</option>
+                <option value="Noida">Noida, India</option>
+                <option value="Bangalore">Bangalore, India</option>
+                <option value="Delhi">Delhi, India</option>
+                <option value="Mumbai">Mumbai, India</option>
+                <option value="Hyderabad">Hyderabad, India</option>
+                <option value="Pune">Pune, India</option>
+                <option value="Chennai">Chennai, India</option>
+                <option value="Kolkata">Kolkata, India</option>
+              </optgroup>
+              <optgroup label="Asia — Middle East & Singapore">
+                <option value="Dubai">Dubai, UAE</option>
+                <option value="Abu Dhabi">Abu Dhabi, UAE</option>
+                <option value="Singapore">Singapore</option>
+                <option value="Riyadh">Riyadh, Saudi Arabia</option>
+              </optgroup>
+              <optgroup label="Asia — Japan">
+                <option value="Tokyo">Tokyo, Japan</option>
+                <option value="Osaka">Osaka, Japan</option>
+              </optgroup>
+              <optgroup label="Oceania — Australia & NZ">
+                <option value="Sydney">Sydney, Australia</option>
+                <option value="Melbourne">Melbourne, Australia</option>
+                <option value="Brisbane">Brisbane, Australia</option>
+                <option value="Perth">Perth, Australia</option>
+                <option value="Auckland">Auckland, New Zealand</option>
+              </optgroup>
+              <optgroup label="South America">
+                <option value="Sao Paulo">São Paulo, Brazil</option>
+                <option value="Rio de Janeiro">Rio de Janeiro, Brazil</option>
+                <option value="Buenos Aires">Buenos Aires, Argentina</option>
+              </optgroup>
+              <optgroup label="Africa">
+                <option value="Johannesburg">Johannesburg, South Africa</option>
+                <option value="Cape Town">Cape Town, South Africa</option>
+                <option value="Cairo">Cairo, Egypt</option>
+                <option value="Lagos">Lagos, Nigeria</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="autogen-input-count">Leads Count *</label>
+            <select id="autogen-input-count" class="form-control" required>
+              <option value="5">5 leads (Fast test)</option>
+              <option value="10" selected>10 leads</option>
+              <option value="20">20 leads</option>
+              <option value="50">50 leads</option>
+              <option value="100">100 leads (Complete batch)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="leads.closeAutoGenModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary"><i data-lucide="zap"></i> Start Sourcing</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. Lead Auto-Generation Progress Modal -->
+  <div class="modal-overlay" id="modal-auto-gen-progress">
+    <div class="modal-card" style="max-width: 450px; text-align: center; padding: 30px;">
+      <div class="loading-container">
+        <div class="spinner spinner-lg"></div>
+        <h3 style="margin-top: 20px; color: var(--primary);">Scraping & Verifying Leads</h3>
+        <p id="autogen-progress-text"
+          style="font-size: 14px; font-weight: 500; margin-top: 10px; color: var(--text-primary);">Initializing
+          Puppeteer...</p>
+        <p id="autogen-progress-subtext" style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">This
+          processes maps directories and verifies email domains safely in the background.</p>
+
+        <!-- Progress bar -->
+        <div
+          style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; margin-top: 20px;">
+          <div id="autogen-progress-bar"
+            style="width: 0%; height: 100%; background: var(--grad-primary); transition: width 0.3s ease;"></div>
+        </div>
+        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;"><span
+            id="autogen-progress-count">0</span> leads enqueued</p>
+      </div>
     </div>
   </div>
 
@@ -933,14 +1292,17 @@
   <script src="js/api.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/dashboard.js"></script>
-  <script src="js/generator.js"></script>
+
   <script src="js/leads.js"></script>
+  <script src="js/instagram.js"></script>
   <script src="js/templates.js"></script>
   <script src="js/sequences.js"></script>
+  <script src="js/sentMail.js"></script>
   <script src="js/planner.js"></script>
   <script src="js/icp.js"></script>
   <script src="js/analytics.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>

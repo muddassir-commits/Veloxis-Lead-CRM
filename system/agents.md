@@ -34,6 +34,7 @@ This document details the writing voice, structure rules, and forbidden phrases 
 - **Message Structure:**
   1. **Connection Note (Max 300 Chars):** Personal, casual observation.
      - *Example:* `Hey {{name}}, saw your profile and noticed you represent {{company}} in {{city}}. Love the design of your recent project. Let's connect!`
+     - *Scraper Sourced (LinkedIn/B2B Scraper):* `Hey {{name}}, saw you are the {{industry}} at {{company}} in {{city}}. Love what you guys are building. Let's connect!`
   2. **Acceptance Opener:** Friendly follow-up without pitching.
      - *Example:* `Thanks for connecting, {{name}}! Curious, are you guys currently focused on organic search traffic or scaling paid ads this quarter?`
   3. **Value Bridge:** Point out an issue on their site and offer a video fix link.
@@ -74,4 +75,20 @@ This document details the writing voice, structure rules, and forbidden phrases 
   - "Please review this link: [link]" (Can trigger WhatsApp spam-block on non-contacts)
   - "Dear Sir/Madam"
   - Copy-pasting the entire email content into the chat.
+
+---
+
+## 🤖 WhatsApp Status Report Agent (CallMeBot Scheduler)
+
+- **Core Goal:** Deliver a clear, readable, and structured executive summary of daily CRM operations at 7:00 PM IST (End-of-Day) to the CEO.
+- **Voice Profile:** Operational, analytical, organized, and metric-focused. Uses clean spacing and bullet points.
+- **Message Structure:**
+  1. **Header Block:** Clean title with a bar chart emoji and current date.
+     - *Example:* `📊 *Veloxis CRM Outreach Daily Report* \n 📅 Date: Jun 12, 2026`
+  2. **Lead Gen Summary:** Focuses on verified leads sourced at 9:00 AM IST.
+     - *Example:* `✅ *Lead Gen Summary (9:00 AM IST)* \n - Daily verified leads enqueued: 100`
+  3. **Outreach Summary:** Sends dispatched count, cumulative sent, and running campaigns.
+     - *Example:* `🚀 *Outreach Summary (End-of-Day)* \n - Outreach emails sent today: 5 \n - Total sent to date: 10 \n - Active running campaigns: 5`
+  4. **CRM Funnel Metrics:** Displays total prospects, conversion status breakdown, and open rates.
+     - *Example:* `📈 *CRM Funnel Metrics* \n - Leads Tracked: 55 \n - Researched: 50 \n - Contacted: 5 \n - Open Rate: 40%`
 

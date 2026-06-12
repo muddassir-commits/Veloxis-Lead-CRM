@@ -13,7 +13,7 @@ router.post('/send', async (req, res) => {
       return res.status(400).json({ success: false, error: 'to, subject, and body parameters are required' });
     }
 
-    const htmlContent = body.replace(/\n/g, '<br/>');
+    const htmlContent = body.replace(/\\n/g, '\n').replace(/\n/g, '<br/>');
     const result = await emailService.sendMail({
       to,
       subject,
@@ -138,6 +138,116 @@ router.all('/sequence/cron', async (req, res) => {
     console.log('⏰ Received external cron trigger for processing outreach sequence...');
     await sequenceService.processDueSequences();
     res.json({ success: true, message: 'Cron sequence processing completed successfully.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 8. GET - Retrieve all sequences for Sequence Manager
+router.get('/sequences', async (req, res) => {
+  try {
+    const { data: sequences, error } = await supabase
+      .from('sequences')
+      .select(`
+        id, current_step, next_sent_at, last_sent_at, status,
+        leads (id, name, company, email, website, country, city)
+      `)
+      .order('updated_at', { ascending: false });
+
+    if (error) throw error;
+    res.json({ success: true, sequences: sequences || [] });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 9. GET - Retrieve all sent emails (sequence history) for Sent Mail screen
+router.get('/sent', async (req, res) => {
+  try {
+    const { data: history, error } = await supabase
+      .from('sequence_history')
+      .select(`
+        id, step, sent_at, status, email_id,
+        leads (id, name, company, email, website, country, city, industry),
+        templates (id, name, type, subject, body, principle)
+      `)
+      .order('sent_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Fetch tracking info for all sent emails to get opens
+    const { data: tracking, error: trackError } = await supabase
+      .from('email_tracking')
+      .select('email_id, opens, last_opened_at');
+
+    if (trackError) throw trackError;
+
+    const trackingMap = {};
+    if (tracking) {
+      tracking.forEach(t => {
+        trackingMap[t.email_id] = t;
+      });
+    }
+
+    // Fetch Signature settings
+    const { data: sigSettings } = await supabase.from('settings').select('value').eq('key', 'email_signature').maybeSingle();
+    const emailSig = sigSettings?.value?.signature || '';
+
+    const nameHelper = require('../utils/nameHelper');
+    const templateEngine = require('../utils/templateEngine');
+
+    // Combine history with tracking and compile template variables
+    const sentEmails = (history || []).map(h => {
+      const track = trackingMap[h.email_id] || { opens: 0, last_opened_at: null };
+      const lead = h.leads || {};
+      const template = h.templates || { subject: '', body: '' };
+
+      const greetingName = nameHelper.getCleanGreetingName(lead.name || '', lead.company);
+      const companyShort = nameHelper.getCleanCompanyName(lead.company || lead.name || '');
+
+      const dataContext = {
+        name: greetingName,
+        greeting_name: greetingName,
+        company: lead.company || 'your business',
+        company_short: companyShort,
+        website: lead.website || '',
+        industry: lead.industry || 'your sector',
+        city: lead.city || 'your city',
+        signature: emailSig
+      };
+
+      const compiledSubject = templateEngine.compileTemplate(template.subject || '', dataContext).replace(/\\n/g, '\n');
+      const compiledBody = templateEngine.compileTemplate(template.body || '', dataContext).replace(/\\n/g, '\n');
+
+      return {
+        id: h.id,
+        step: h.step,
+        sent_at: h.sent_at,
+        status: h.status,
+        email_id: h.email_id,
+        opens: track.opens,
+        last_opened_at: track.last_opened_at,
+        lead: {
+          id: lead.id,
+          name: lead.name,
+          company: lead.company,
+          email: lead.email,
+          website: lead.website,
+          industry: lead.industry,
+          city: lead.city,
+          country: lead.country
+        },
+        template: {
+          name: template.name,
+          principle: template.principle,
+          type: template.type
+        },
+        subject: compiledSubject,
+        body: compiledBody
+      };
+    });
+
+    res.json({ success: true, sentEmails });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

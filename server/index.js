@@ -4,6 +4,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const sequenceService = require('./services/sequenceService');
 const browserManager = require('./services/browserManager');
+const autoSchedulerService = require('./services/autoSchedulerService');
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -31,7 +32,6 @@ app.use('/track', trackerRouter);
 
 // Bind API Sub-routes
 const leadsRouter = require('./routes/leads');
-const scraperRouter = require('./routes/scraper');
 const emailRouter = require('./routes/email');
 const templatesRouter = require('./routes/templates');
 const plannerRouter = require('./routes/planner');
@@ -40,7 +40,6 @@ const icpRouter = require('./routes/icp');
 const settingsRouter = require('./routes/settings');
 
 app.use('/api/leads', leadsRouter);
-app.use('/api/scrape', scraperRouter);
 app.use('/api/email', emailRouter);
 app.use('/api/templates', templatesRouter);
 app.use('/api/planner', plannerRouter);
@@ -80,6 +79,13 @@ try {
   console.error('❌ Failed to start cron scheduler:', cronErr.message);
 }
 
+// Start Daily Lead Gen & Outreach Auto Scheduler
+try {
+  autoSchedulerService.startAutoScheduler();
+} catch (autoErr) {
+  console.error('❌ Failed to start auto scheduler:', autoErr.message);
+}
+
 // Start Server Listening
 const server = app.listen(PORT, () => {
   console.log(`================================================================`);
@@ -93,6 +99,11 @@ const server = app.listen(PORT, () => {
 process.on('SIGTERM', async () => {
   console.log('SIGTERM signal received. Shutting down gracefully...');
   sequenceService.stopScheduler();
+  try {
+    autoSchedulerService.stopAutoScheduler();
+  } catch (err) {
+    console.error('❌ Failed to stop auto scheduler:', err.message);
+  }
   await browserManager.close();
   server.close(() => {
     console.log('Server connection closed.');
@@ -103,6 +114,11 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => {
   console.log('SIGINT signal received. Shutting down gracefully...');
   sequenceService.stopScheduler();
+  try {
+    autoSchedulerService.stopAutoScheduler();
+  } catch (err) {
+    console.error('❌ Failed to stop auto scheduler:', err.message);
+  }
   await browserManager.close();
   server.close(() => {
     console.log('Server connection closed.');

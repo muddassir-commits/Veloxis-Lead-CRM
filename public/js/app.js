@@ -2,6 +2,14 @@
  * Veloxis Global CRM — Main Controller & Routing
  */
 
+window.safeCreateIcons = function() {
+  if (typeof lucide !== 'undefined' && typeof lucide.createIcons === 'function') {
+    lucide.createIcons();
+  } else {
+    console.warn('⚠️ Lucide library is offline or failed to load. SVG icon compilation skipped.');
+  }
+};
+
 const app = {
   currentScreen: 'dashboard',
 
@@ -21,7 +29,7 @@ const app = {
     this.refreshScreen(this.currentScreen);
 
     // Initial SVG Icons compilation
-    lucide.createIcons();
+    safeCreateIcons();
 
     // Redraw SVG charts on window resize
     window.addEventListener('resize', () => {
@@ -31,9 +39,14 @@ const app = {
     });
 
     // Run first initialization
-    generator.init();
     leads.init();
+    instagramOutreach.init();
     templates.init();
+
+    // Start auto-refresh interval every 30 seconds for live screens (dashboard, analytics, sent-mail)
+    setInterval(() => {
+      this.pollActiveScreenData();
+    }, 30000);
   },
 
   showScreen(screenId) {
@@ -68,11 +81,17 @@ const app = {
       case 'leads':
         leads.loadLeads();
         break;
+      case 'instagram':
+        instagramOutreach.loadLeads();
+        break;
       case 'templates':
         templates.loadTemplates();
         break;
       case 'sequences':
         sequences.init();
+        break;
+      case 'sent-mail':
+        sentMail.init();
         break;
       case 'planner':
         planner.init();
@@ -86,6 +105,17 @@ const app = {
       case 'settings':
         settings.init();
         break;
+    }
+  },
+
+  pollActiveScreenData() {
+    console.log(`⏱️ Auto-polling updates for active screen: ${this.currentScreen}...`);
+    if (this.currentScreen === 'dashboard') {
+      dashboard.loadStats().catch(err => console.error('Auto-refresh dashboard failed:', err.message));
+    } else if (this.currentScreen === 'analytics') {
+      analytics.loadAnalyticsData().catch(err => console.error('Auto-refresh analytics failed:', err.message));
+    } else if (this.currentScreen === 'sent-mail') {
+      sentMail.loadEmails(true).catch(err => console.error('Auto-refresh sent-mail failed:', err.message));
     }
   },
 
@@ -116,7 +146,7 @@ const app = {
     `;
 
     container.appendChild(toast);
-    lucide.createIcons();
+    safeCreateIcons();
 
     // Trigger removal animation
     setTimeout(() => {

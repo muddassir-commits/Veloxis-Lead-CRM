@@ -67,12 +67,18 @@ Launching paid Facebook & Instagram campaigns that deliver a high Return on Ad S
 Leverage internal proprietary scraping, verification, and CRM tools to identify, enrich, and close target agency clients.
 
 ### Capabilities & Systems:
-1. **B2B Apollo Search Engine:** Connects directly to Apollo.io API to fetch high-converting B2B contacts, verified emails, decision-maker job titles, and LinkedIn URLs instantly by niche, location, and seniority.
+1. **B2B Apollo Search Engine (with Free Scraper Fallback):** Connects to Apollo.io API, or automatically falls back to a free DuckDuckGo LinkedIn scraper with self-healing selector parsers if keys are on a free/unpaid plan.
 2. **Social Search Prospector:** Automates search engine scrapes targeting profile directories on LinkedIn and Instagram using niche keywords and locations.
 3. **Google Maps Scraper (1-Click Local Search):** Target specific locations (e.g. "gyms in Lucknow") and extract addresses, phone numbers, ratings, and websites.
-4. **5-Layer Email Finder (Cheerio + Puppeteer Stealth):** Finds valid, syntax-checked emails by scraping websites. Features an automated Puppeteer fallback for dynamic SPA platforms with same-domain subpage routing.
+4. **5-Layer Email Finder (Cheerio + Puppeteer Stealth + Auto Website Lookup):** Finds valid, verified emails by scraping websites. Automatically looks up missing company websites on the fly via DuckDuckGo before running.
 5. **DNS/MX Fail-safe Verification:** Fallbacks gracefully to regex/syntax verification if network firewalls block SMTP socket queries, ensuring zero false-negative lead loss.
 6. **WhatsApp Active Verification Badge:** Verifies WhatsApp capability directly from the CRM panel, appending status metadata to leads.
 7. **Interactive Lead Editor:** Allows manual override and editing of any lead data, keeping Supabase synced in real-time.
-8. **SMTP Dynamic Outreach Sequences:** Fires automated 4-stage Hormozi sequences with live timezone scheduling.
+8. **CRM Bulk Selection Controls:** Perform bulk operations such as finding email coordinates, initiating sequences, or executing atomic batch deletions on selected leads (placed at the top of the table for easy access, with the bulk delete button styled with high-contrast white text on a red background).
+9. **SMTP Dynamic Outreach Sequences:** Fires automated 4-stage Hormozi sequences with live timezone scheduling.
+10. **Daily Lead Gen & Outreach Auto Scheduler:** Automatic cron schedules checking database queues, scraping 100 new hot leads daily at 9:00 AM IST, and dispatching follow-up emails daily at 10:00 AM IST.
+11. **CallMeBot WhatsApp Status Reporter:** Syncs automatically with the outreach queue to push instant, formatted funnel conversions, open rates, and sending volumes directly to the Founder's phone.
+12. **Gmail-Style Sent Mail split-pane log:** Allows real-time viewing of compiled email templates, open tracking counters, and direct full-text searching.
+13. **Client-Side Pagination & Sheets Export:** Option to show leads in 25, 50, 75, 100, or All lists. Instantly export active filtered/searched prospects to a UTF-8 CSV file (with BOM formatting to open correctly in Excel and Google Sheets).
+14. **30-Second Live Polling Auto-Refresh:** Background timer automatically updates dashboard stats, conversion metrics, and sent mail open tracker telemetry every 30 seconds.
 

@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
     // 2. Fetch email metrics
     const { data: history, error: histErr } = await supabase
       .from('sequence_history')
-      .select('id, sent_at, step');
+      .select('id, sent_at, step, lead_id');
       
     if (histErr) throw histErr;
 
@@ -53,14 +53,18 @@ router.get('/', async (req, res) => {
     if (trackErr) throw trackErr;
 
     let emailsSentToday = 0;
+    const uniqueLeadsContactedTodaySet = new Set();
     history.forEach(h => {
       const isSentToday = h.sent_at && (new Date(h.sent_at).toDateString() === new Date().toDateString());
       if (isSentToday) {
         emailsSentToday++;
+        uniqueLeadsContactedTodaySet.add(h.lead_id);
       }
     });
 
     const totalSent = history.length;
+    const uniqueLeadsContacted = new Set(history.map(h => h.lead_id)).size;
+    const uniqueLeadsContactedToday = uniqueLeadsContactedTodaySet.size;
     const totalOpens = tracking.reduce((acc, curr) => acc + (curr.opens || 0), 0);
     const uniqueOpened = tracking.filter(t => t.opens > 0).length;
     const totalClicked = tracking.filter(t => t.clicked).length;
@@ -106,11 +110,21 @@ router.get('/', async (req, res) => {
       });
     }
 
+    const won = leadsByStatus['Won'] || 0;
+    const meeting = (leadsByStatus['Meeting'] || 0) + (leadsByStatus['Proposal'] || 0) + won;
+    const replied = (leadsByStatus['Replied'] || 0) + meeting;
+    const followedUp = (leadsByStatus['Followed Up'] || 0) + replied;
+    const contacted = (leadsByStatus['Contacted'] || 0) + followedUp;
+    const researched = (leadsByStatus['Researched'] || 0) + contacted;
+    const newLeads = (leadsByStatus['New'] || 0) + researched;
+
     res.json({
       success: true,
       summary: {
         totalLeads,
         totalSent,
+        uniqueLeadsContacted,
+        uniqueLeadsContactedToday,
         totalOpens,
         uniqueOpened,
         openRate,
@@ -123,14 +137,14 @@ router.get('/', async (req, res) => {
         instagramSentToday
       },
       funnel: {
-        new: leadsByStatus['New'] || 0,
-        researched: leadsByStatus['Researched'] || 0,
-        contacted: leadsByStatus['Contacted'] || 0,
-        followedUp: leadsByStatus['Followed Up'] || 0,
-        replied: leadsByStatus['Replied'] || 0,
-        meeting: leadsByStatus['Meeting'] || 0,
+        new: newLeads,
+        researched: researched,
+        contacted: contacted,
+        followedUp: followedUp,
+        replied: replied,
+        meeting: meeting,
         proposal: leadsByStatus['Proposal'] || 0,
-        won: leadsByStatus['Won'] || 0,
+        won: won,
         lost: leadsByStatus['Lost'] || 0
       },
       leadsByScore,

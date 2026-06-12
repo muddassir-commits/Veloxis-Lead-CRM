@@ -32,6 +32,7 @@ const dashboard = {
 
       // 2. Set Stat Values
       document.getElementById('stat-total-leads').textContent = summary.totalLeads;
+      document.getElementById('stat-unique-contacted').textContent = summary.uniqueLeadsContacted || 0;
       document.getElementById('stat-total-sent').textContent = summary.totalSent;
       document.getElementById('stat-open-rate').textContent = `${summary.openRate}%`;
       document.getElementById('stat-replies').textContent = summary.replies;
@@ -43,9 +44,10 @@ const dashboard = {
 
       // Calculate sent values today from server analytics summary
       const emailSentCount = summary.emailsSentToday || 0;
+      const uniqueLeadsToday = summary.uniqueLeadsContactedToday || 0;
       
       const emailPct = Math.min(Math.round((emailSentCount / limits.email_daily_limit) * 100), 100);
-      document.getElementById('progress-email-text').textContent = `${emailSentCount} / ${limits.email_daily_limit} Sent`;
+      document.getElementById('progress-email-text').textContent = `${emailSentCount} Sent (${uniqueLeadsToday} Leads) / ${limits.email_daily_limit} Limit`;
       document.getElementById('progress-email-bar').style.width = `${emailPct}%`;
 
       // Manual logs (retrieved dynamically from today's database logs via analytics summary)

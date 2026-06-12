@@ -39,7 +39,7 @@ async function verifyUI() {
 
     // 1. Verify all 9 Screen IDs exist in the DOM
     const screens = [
-      'dashboard', 'generator', 'leads', 'templates', 
+      'dashboard', 'leads', 'instagram', 'templates', 
       'sequences', 'planner', 'icp', 'analytics', 'settings'
     ];
 

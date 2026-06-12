@@ -17,7 +17,7 @@ This document details the background context for Muddassir Ali, CEO & Founder of
 | **Phone Number** | +91-88876 20727 |
 | **LinkedIn Profile** | [linkedin.com/in/muddassir-alii](https://linkedin.com/in/muddassir-alii) |
 | **Instagram Handle** | [@muddassir__ali](https://instagram.com/muddassir__ali) |
-| **WhatsApp Business** | +91-88876 20727 (Linked to CRM check-and-badge system) |
+| **WhatsApp Number** | +91-88876 20727 (Receives automated 7:00 PM daily metrics summary reports via CallMeBot) |
 | **Target Budget** | ₹0 initial setup (using free-tier cloud stacks, upgrading upon client close) |
 
 ---
@@ -28,7 +28,7 @@ This document details the background context for Muddassir Ali, CEO & Founder of
 Muddassir Ali founded Veloxis Global after working 4+ years in digital marketing roles. He witnessed agencies charging high retainers while delivering meaningless vanity metrics (likes, impressions) that failed to produce actual revenue or closed sales. Veloxis was built to deliver strategy-driven, technical execution that connects digital channels directly to business goals and bottom-line conversions.
 
 ### Core Value Proposition
-We don't sell "SEO services" or "website packages". We sell **Dream Outcomes** — search rankings that turn into high-intent inbound inquiries, fast-loading web designs that double client conversion rates, and paid ad funnels that capture customers with a predictable Return on Ad Spend (ROAS).
+We don't sell "generic Meta Ads setup" or "monthly management retainers". We sell **Dream Outcomes** — highly pre-qualified appointments booked directly on your calendar, backed by a 100% show-up guarantee, and secured by our 60-second WhatsApp/SMS lead validation engine that filters out fake/spam phone numbers instantly. You only pay for qualified prospects who show up.
 
 ---
 
@@ -60,10 +60,17 @@ When prospects ask for credibility, the outreach models use these verified resul
 - **Gyms & Fitness Studios:** Local fitness boutiques, yoga centers, crossfit clubs looking for members.
 - **Clinics & Healthcare Practices:** Specialized medical professionals, dental clinics, physiotherapy centers.
 
+### Sourcing & Scraping Implementation:
+- **Automated Daily Cycles**: The system triggers a B2B scraper search every morning at 9:00 AM IST targeting active ICP verticals and locations to source 100 new verified prospects.
+- **Auto-Enrichment**: Sourced leads are enriched dynamically with company domains via the website finder and domain web-scraping fallbacks.
+- **Outreach & Telemetry Reports**: At 10:00 AM IST, scheduled email outreach is initiated. At 7:00 PM IST, a comprehensive metrics summary report is dispatched to the CEO via Email, Telegram, and WhatsApp.
+- **Interactive Triggers**: Manual searches and connection checking (e.g. WA check buttons) remain available inside the CRM for custom validation runs.
+- **Live Metrics, Pagination & Export**: The dashboard stats, analytics charts, and sent mail archives automatically poll and refresh every 30 seconds to show live email opens and replies in real-time. Displays can be paginated (25, 50, 75, 100, or All) and exported as a UTF-8 CSV sheet with a single click.
+
 ---
 
 ## 🗣️ Communication and Outreach Philosophy
 
 1. **Alex Hormozi Influence:** Bold, confident, high-conviction, and value-first. No corporate fluff, fake greetings, or generic sales letters.
-2. **The "Give Before You Ask" Rule:** We do not ask prospects to hop on a calendar call in our first message. We diagnose a real problem (e.g. mobile speed delay, missing competitor keywords), present the solution for free, and ask if we can send the details.
-3. **Risk Reversal CTAs:** "If you don't find the free audit useful, you wasted 2 minutes. That's it. Let me know if I should send it."
+2. **The "Give Before You Ask" Rule:** We do not ask prospects to hop on a calendar call in our first message. We diagnose a real problem (e.g. lack of retargeting, ad competitor gaps), present the campaign blueprint/copy mockup for free, and ask if we can send the details.
+3. **Risk Reversal CTAs:** "If you don't find this campaign blueprint useful, you wasted 90 seconds. That's it. Let me know if I should send it."

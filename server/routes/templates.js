@@ -128,6 +128,7 @@ router.post('/render', async (req, res) => {
       website: lead.website || '',
       industry: lead.industry || 'your sector',
       city: lead.city || 'your city',
+      deep_research: lead.deep_research || lead.notes || '',
       signature: emailSig
     };
 

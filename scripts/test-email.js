@@ -27,7 +27,7 @@ async function runTest() {
   console.log('\n✅ SMTP Connection verified successfully! Transporter is ready to send messages.');
 
   // Test send if recipient is specified in CLI arguments
-  const testRecipient = process.argv[2] || process.env.SMTP_USER;
+  const testRecipient = process.argv[2] || process.env.REPORT_EMAIL || 'muddassiralidude@gmail.com';
   console.log(`\n📧 Sending test email to: ${testRecipient}...`);
 
   const htmlBody = `

@@ -16,7 +16,8 @@ const settings = {
 
       // 1. Signature
       if (current.email_signature) {
-        document.getElementById('settings-signature').value = current.email_signature.signature || '';
+        const sig = current.email_signature.signature || '';
+        document.getElementById('settings-signature').value = sig.replace(/\\n/g, '\n');
       }
 
       // 2. Schedule

@@ -45,3 +45,8 @@ coverage
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Scratch and verification artifacts
+scratch/
+public/assets/dashboard_verified.png
+public/assets/verification/

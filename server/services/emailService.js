@@ -52,9 +52,14 @@ async function sendMail({ to, subject, text, html, trackerId }) {
   let finalHtml = html;
   if (trackerId && html) {
     // Generate tracking image URL. When deployed, it should point to Render backend URL.
-    const backendUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://veloxis-outreach-api.onrender.com' 
-      : `http://localhost:${process.env.PORT || 5000}`;
+    // In local development, if BACKEND_URL is still pointing to the default Render host, fallback to localhost.
+    // In production, default to process.env.BACKEND_URL or fallback to Render production host.
+    const isDev = process.env.NODE_ENV !== 'production';
+    const isDefaultRenderUrl = process.env.BACKEND_URL && process.env.BACKEND_URL.includes('onrender.com');
+    
+    const backendUrl = isDev
+      ? (isDefaultRenderUrl ? `http://localhost:${process.env.PORT || 5000}` : (process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`))
+      : (process.env.BACKEND_URL || 'https://veloxis-outreach-api.onrender.com');
     
     const trackingPixelUrl = `${backendUrl}/track/${trackerId}`;
     

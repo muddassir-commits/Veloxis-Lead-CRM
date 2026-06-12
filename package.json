@@ -10,7 +10,10 @@
     "setup:supabase": "node scripts/setup-supabase.js",
     "seed:templates": "node scripts/seed-templates.js",
     "clean:db": "node scripts/clean-db.js",
-    "test:email": "node scripts/test-email.js"
+    "test:email": "node scripts/test-email.js",
+    "test:whatsapp": "node scripts/test-whatsapp.js",
+    "test:telegram": "node scripts/test-telegram.js",
+    "auto:scheduler": "node scripts/auto-runner.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

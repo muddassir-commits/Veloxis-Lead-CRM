@@ -23,8 +23,8 @@ const icp = {
         // Render defaults
         this.renderICPMarkerCard({
           name: 'Veloxis High-Ticket ICP',
-          industries: ['Education / Coaching', 'Real Estate', 'E-commerce', 'Gyms / Fitness'],
-          regions: ['India', 'USA', 'UK'],
+          industries: ['Real Estate Developer', 'Gyms', 'E-commerce Store', 'Software Agency', 'Education / Coaching'],
+          regions: ['North America', 'Europe', 'Asia', 'Oceania'],
           decision_makers: ['Founder', 'CEO', 'Owner']
         });
       }

@@ -157,9 +157,10 @@ async function runFullVerification() {
 
     // 8. Visit all remaining screens
     const screens = [
-      { id: 'generator', name: 'Lead Generator' },
+      { id: 'instagram', name: 'Instagram DM CRM' },
       { id: 'templates', name: 'Outreach Hub' },
       { id: 'sequences', name: 'Sequence Manager' },
+      { id: 'sent-mail', name: 'Sent Mail' },
       { id: 'planner', name: 'Weekly Planner' },
       { id: 'icp', name: 'ICP Builder' },
       { id: 'analytics', name: 'Analytics' },

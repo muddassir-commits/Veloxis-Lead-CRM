@@ -31,6 +31,10 @@ const api = {
     return this.request('/api/leads/clear/all', 'DELETE');
   },
 
+  async bulkDeleteLeads(leadIds) {
+    return this.request('/api/leads/bulk-delete', 'POST', { leadIds });
+  },
+
   async bulkInsertLeads(leads) {
     return this.request(`/api/leads/bulk`, 'POST', { leads });
   },
@@ -57,6 +61,14 @@ const api = {
   },
 
   // Email & Sequences
+  async getSequences() {
+    return this.request('/api/email/sequences');
+  },
+
+  async getSentEmails() {
+    return this.request('/api/email/sent');
+  },
+
   async sendManualEmail(to, subject, body) {
     return this.request('/api/email/send', 'POST', { to, subject, body });
   },
@@ -133,6 +145,15 @@ const api = {
 
   async testSMTP() {
     return this.request('/api/settings/test-smtp', 'POST');
+  },
+
+  // Lead Auto-Generation
+  async triggerAutoGenLeads(count, industry, city, mode = 'email') {
+    return this.request('/api/leads/auto-generate', 'POST', { count, industry, city, mode });
+  },
+
+  async getAutoGenStatus() {
+    return this.request('/api/leads/auto-generate/status');
   },
 
   // Helper Request Method

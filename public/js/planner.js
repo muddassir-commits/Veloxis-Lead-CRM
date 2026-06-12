@@ -24,12 +24,50 @@ const planner = {
     }
   },
 
+  getOffsetForRegion(countryOrCity) {
+    if (!countryOrCity) return 5.5; // Default to India
+    const region = countryOrCity.trim().toLowerCase();
+    const regionOffsets = {
+      'india': 5.5,
+      'singapore': 8,
+      'australia': 10,
+      'uk': 1,
+      'london': 1,
+      'united kingdom': 1,
+      'usa east': -5,
+      'us east': -5,
+      'usa (east)': -5,
+      'est': -5,
+      'new york': -5,
+      'usa west': -8,
+      'us west': -8,
+      'usa (west)': -8,
+      'pst': -8,
+      'california': -8,
+      'canada': -5,
+      'usa': -5
+    };
+    for (const [key, offset] of Object.entries(regionOffsets)) {
+      if (region.includes(key)) {
+        return offset;
+      }
+    }
+    return 5.5; // Default fallback
+  },
+
+  getLeadDayOfWeek(nextSentAtStr, country, city) {
+    const date = new Date(nextSentAtStr);
+    const offset = this.getOffsetForRegion(country || city || 'India');
+    const recipientTime = new Date(date.getTime() + (offset * 3600000));
+    return recipientTime.getUTCDay();
+  },
+
   renderCalendar() {
     const container = document.getElementById('planner-calendar-grid');
     container.innerHTML = '';
 
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const todayIndex = new Date().getDay(); // 1 = Mon, ..., 6 = Sat
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayIndex = new Date().getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
 
     // Fetch lists from planner payload
     const scheduledEmails = this.plannerData.scheduledEmails || [];
@@ -37,18 +75,17 @@ const planner = {
     const instagramQueue = this.plannerData.instagramQueue || [];
 
     days.forEach((day, idx) => {
-      const dayNum = idx + 1; // Mon = 1
+      const dayNum = idx; // Sun = 0
       const isToday = dayNum === todayIndex;
       
       const dayCard = document.createElement('div');
       dayCard.className = `planner-day ${isToday ? 'today' : ''}`;
       
       // Calculate daily schedule counts
-      // Emails scheduled for this weekday
+      // Emails scheduled for this weekday (in recipient's local time)
       const dayEmails = scheduledEmails.filter(seq => {
         if (!seq.next_sent_at) return false;
-        const date = new Date(seq.next_sent_at);
-        return date.getDay() === dayNum;
+        return this.getLeadDayOfWeek(seq.next_sent_at, seq.leads?.country, seq.leads?.city) === dayNum;
       });
 
       // Distribute LinkedIn / Instagram targets across the weekdays

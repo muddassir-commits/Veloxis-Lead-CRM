@@ -276,9 +276,70 @@ async function generateCommonPatterns(websiteUrl) {
 }
 
 /**
+ * Search DuckDuckGo for the company's official website URL
+ * @param {string} companyName 
+ * @returns {Promise<string|null>} Official website URL
+ */
+async function searchCompanyWebsite(companyName) {
+  if (!companyName || companyName.toLowerCase() === 'direct' || companyName.toLowerCase().includes('unknown')) {
+    return null;
+  }
+  
+  console.log(`🔍 Searching company website for: "${companyName}"`);
+  let page;
+  try {
+    page = await browserManager.newPage();
+    const query = `"${companyName}" official website`;
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    
+    await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 15000 });
+    
+    const firstUrl = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('.web-result .result__title a'));
+      for (const link of links) {
+        const url = link.href;
+        if (!url) continue;
+        const lowUrl = url.toLowerCase();
+        
+        // Skip social media, directories and general search/ad sites
+        if (lowUrl.includes('linkedin.com') || 
+            lowUrl.includes('facebook.com') || 
+            lowUrl.includes('instagram.com') || 
+            lowUrl.includes('twitter.com') || 
+            lowUrl.includes('x.com') ||
+            lowUrl.includes('youtube.com') || 
+            lowUrl.includes('wikipedia.org') || 
+            lowUrl.includes('yelp.com') || 
+            lowUrl.includes('glassdoor.com') || 
+            lowUrl.includes('indeed.com') ||
+            lowUrl.includes('crunchbase.com') ||
+            lowUrl.includes('duckduckgo.com')) {
+          continue;
+        }
+        
+        return url;
+      }
+      return null;
+    });
+
+    if (firstUrl) {
+      console.log(`🎯 Found website for ${companyName}: ${firstUrl}`);
+      return firstUrl;
+    }
+  } catch (err) {
+    console.warn(`⚠️ Error searching website for "${companyName}":`, err.message);
+  } finally {
+    if (page) {
+      await page.close().catch(() => {});
+    }
+  }
+  return null;
+}
+
+/**
  * Master Method: Run the 5-Layer Search logic for a lead
  * @param {Object} lead 
- * @returns {Promise<Object>} - Output email, socials, and notes
+ * @returns {Promise<Object>} - Output email, website, socials, and notes
  */
 async function findEmailForLead(lead) {
   console.log(`🔍 Initializing Email Finder for: ${lead.name} (${lead.company})`);
@@ -292,6 +353,7 @@ async function findEmailForLead(lead) {
 
   const result = {
     email: null,
+    website: lead.website || null,
     linkedin: lead.linkedin || null,
     instagram: lead.instagram || null,
     notes: sanitizedNotes
@@ -306,19 +368,30 @@ async function findEmailForLead(lead) {
     }
   }
 
-  if (!lead.website) {
-    result.notes += '\n[Email Finder] No website URL provided. Skipping web-scraping layers.';
+  let website = lead.website || null;
+  if (!website && lead.company) {
+    result.notes += `\n[Email Finder] Website missing. Searching web for "${lead.company}" website...`;
+    website = await searchCompanyWebsite(lead.company);
+    if (website) {
+      result.website = website;
+      result.notes += `\n[Email Finder] Found website: ${website}`;
+    } else {
+      result.notes += '\n[Email Finder] Website could not be found. Skipping web-scraping layers.';
+    }
+  }
+
+  if (!website) {
     return result;
   }
 
   // LAYER 1: Deep Web Scrape (Cheerio & Fetch)
   try {
-    let webResult = await scrapeWebsiteForEmails(lead.website);
+    let webResult = await scrapeWebsiteForEmails(website);
     
     // ADVANCED LAYER 4 FALLBACK: If standard cheerio scraping finds no emails, trigger Puppeteer!
     if (webResult.emails.length === 0) {
       console.log(`💡 Cheerio scraper yielded 0 emails. Launching Advanced Puppeteer Scraper...`);
-      const puppeteerResult = await scrapeWebsiteWithPuppeteer(lead.website);
+      const puppeteerResult = await scrapeWebsiteWithPuppeteer(website);
       webResult.emails = [...webResult.emails, ...puppeteerResult.emails];
       Object.assign(webResult.socials, puppeteerResult.socials);
     }
@@ -344,7 +417,7 @@ async function findEmailForLead(lead) {
 
   // LAYER 2: Common Patterns (info@, contact@, etc.) + MX Verification
   try {
-    const patternEmails = await generateCommonPatterns(lead.website);
+    const patternEmails = await generateCommonPatterns(website);
     // Since verification makes external network requests, we test candidates in parallel
     for (const candidate of patternEmails) {
       const verify = await emailVerifyService.verifyEmail(candidate);
@@ -362,7 +435,7 @@ async function findEmailForLead(lead) {
   // LAYER 3 & 5: Owner Name Matching Fallback
   if (lead.name) {
     try {
-      const normalized = normalizeUrl(lead.website);
+      const normalized = normalizeUrl(website);
       const urlObj = new URL(normalized);
       const domain = urlObj.hostname.replace('www.', '');
 
@@ -385,8 +458,115 @@ async function findEmailForLead(lead) {
   return result;
 }
 
+/**
+ * Analyzes website URL for Meta Pixel and WhatsApp widgets
+ * @param {string} websiteUrl 
+ * @returns {Promise<Object>} gaps analysis flags
+ */
+async function analyzeWebsiteGaps(websiteUrl) {
+  const normalized = normalizeUrl(websiteUrl);
+  if (!normalized) return { hasPixel: false, hasWhatsApp: false, hasBooking: false };
+
+  try {
+    const html = await fetchHtml(normalized);
+    if (!html) return { hasPixel: false, hasWhatsApp: false, hasBooking: false };
+
+    const lowHtml = html.toLowerCase();
+    
+    // Check for Meta Pixel
+    const hasPixel = lowHtml.includes('connect.facebook.net') || 
+                      lowHtml.includes('fbq(') || 
+                      lowHtml.includes('fbevents.js') ||
+                      lowHtml.includes('tr?id=');
+
+    // Check for WhatsApp
+    const hasWhatsApp = lowHtml.includes('wa.me') || 
+                         lowHtml.includes('api.whatsapp.com') || 
+                         lowHtml.includes('whatsapp.com/send') || 
+                         lowHtml.includes('whatsapp-widget');
+
+    // Check for booking links (calendly, acuity, etc.)
+    const hasBooking = lowHtml.includes('calendly.com') || 
+                        lowHtml.includes('acuityscheduling.com') || 
+                        lowHtml.includes('bookafy.com') || 
+                        lowHtml.includes('tidycal.com') ||
+                        lowHtml.includes('booking');
+
+    return { hasPixel, hasWhatsApp, hasBooking };
+  } catch (err) {
+    console.warn(`⚠️ Error analyzing website gaps for ${websiteUrl}:`, err.message);
+    return { hasPixel: false, hasWhatsApp: false, hasBooking: false };
+  }
+}
+
+/**
+ * Compiles a Hormozi-aligned 4-part Deep Research Report
+ */
+function generateDeepResearchReport(companyName, industry, website, gaps) {
+  let lacking = [];
+  let solutions = [];
+  
+  if (!website) {
+    lacking.push('- Lacks a dedicated, conversion-focused landing page (unable to capture local intent traffic).');
+    solutions.push('- Design & launch a custom high-ticket landing page tailored for local customer acquisition.');
+    lacking.push('- Lacks a Meta Pixel to target visitors and build lookalike audiences.');
+    solutions.push('- Setup & integrate Meta Pixel code on the landing page for complete conversion tracking.');
+    lacking.push('- Missing WhatsApp instant lead-verification system (at risk of fake number spam).');
+    solutions.push('- Embed the Veloxis 60-Second WhatsApp Verification Widget to filter fake leads.');
+  } else {
+    if (!gaps.hasPixel) {
+      lacking.push('- No Meta Pixel detected (unable to run retargeting ads or track paid campaigns).');
+      solutions.push('- Install and configure Meta Pixel tracking for retargeting and custom conversion events.');
+    }
+    if (!gaps.hasWhatsApp) {
+      lacking.push('- Missing 60-second real-time WhatsApp verification widget (fake lead verification is offline).');
+      solutions.push('- Deploy a 1-click WhatsApp messaging and number-validation widget to boost response rates.');
+    }
+    if (!gaps.hasBooking) {
+      lacking.push('- Lacks a direct booking widget (requires manual emailing or calling back to secure appointments).');
+      solutions.push('- Integrate a calendar scheduling engine (e.g., Calendly/Acuity) to automate booking flow.');
+    }
+  }
+
+  if (lacking.length === 0) {
+    lacking.push('- Lacks an active, high-volume paid Meta Ads client acquisition funnel.');
+    lacking.push('- Retargeting is active but cold ad flows are sub-optimal.');
+    solutions.push('- Launch a risk-free Pay-Per-Showed-Up-Meeting Meta Ads campaign.');
+    solutions.push('- Introduce multi-variant creative testing to scale weekly bookings.');
+  }
+
+  // Generate Hormozi-aligned vision based on industry
+  let vision = `Scale operations and acquire high-value clients in the local market using premium paid social funnels.`;
+  const indLower = industry.toLowerCase();
+  if (indLower.includes('gym')) {
+    vision = `Capture local recurring membership sign-ups and scale high-ticket personal training packages.`;
+  } else if (indLower.includes('dental') || indLower.includes('dentist')) {
+    vision = `Fill high-value cosmetic, dental implant, and orthodontic booking slots with local patients.`;
+  } else if (indLower.includes('spa') || indLower.includes('medspa')) {
+    vision = `Maximize bookings for premium aesthetic procedures (coolsculpting, fillers, lasers) with local clients.`;
+  } else if (indLower.includes('real estate') || indLower.includes('developer')) {
+    vision = `Acquire qualified home buyers and premium investor leads for upcoming residential developments.`;
+  } else if (indLower.includes('roof') || indLower.includes('contractor') || indLower.includes('hvac')) {
+    vision = `Generate high-ticket replacement and repair installation bookings within target service postcodes.`;
+  } else if (indLower.includes('solar')) {
+    vision = `Identify homeowners interested in solar transitions and book qualified site assessment audits.`;
+  } else if (indLower.includes('ecommerce') || indLower.includes('store')) {
+    vision = `Increase Shopify checkout completions and boost customer lifetime value (LTV) through paid conversion scaling.`;
+  }
+
+  return `🏥 Company: ${companyName}
+🎯 Vision: ${vision}
+⚠️ Lacking Areas:
+${lacking.join('\n')}
+💡 Solutions Needed:
+${solutions.join('\n')}`;
+}
+
 module.exports = {
   findEmailForLead,
   scrapeWebsiteForEmails,
-  generateCommonPatterns
+  generateCommonPatterns,
+  searchCompanyWebsite,
+  analyzeWebsiteGaps,
+  generateDeepResearchReport
 };

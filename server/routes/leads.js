@@ -190,4 +190,64 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// 7. POST - Bulk delete leads
+router.post('/bulk-delete', async (req, res) => {
+  try {
+    const { leadIds } = req.body;
+    if (!Array.isArray(leadIds)) {
+      return res.status(400).json({ success: false, error: 'leadIds must be an array' });
+    }
+
+    const { data, error } = await supabase
+      .from('leads')
+      .delete()
+      .in('id', leadIds)
+      .select('id');
+
+    if (error) throw error;
+    res.json({ 
+      success: true, 
+      count: data ? data.length : 0, 
+      message: `${data ? data.length : 0} leads deleted successfully.` 
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 8. POST - Trigger Auto-Generation of Leads from CRM
+router.post('/auto-generate', async (req, res) => {
+  try {
+    const { count = 10, industry, city, mode = 'email' } = req.body;
+
+    const autoSchedulerService = require('../services/autoSchedulerService');
+    
+    if (autoSchedulerService.leadGenProgress.running) {
+      return res.status(400).json({ success: false, error: 'A lead generation task is already running.' });
+    }
+
+    const industries = industry ? [industry] : null;
+    const cities = city ? [city] : null;
+
+    // Trigger asynchronously so it doesn't block the request and cause gateway timeouts
+    autoSchedulerService.runDailyLeadGeneration(parseInt(count), industries, cities, mode)
+      .then(inserted => {
+        console.log(`🚀 CRM triggered lead generation completed. Enqueued ${inserted} leads.`);
+      })
+      .catch(err => {
+        console.error('❌ CRM triggered lead generation failed:', err.message);
+      });
+
+    res.json({ success: true, message: 'Lead auto-generation started in the background.' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 9. GET - Get current progress of Lead Auto-Generation
+router.get('/auto-generate/status', (req, res) => {
+  const autoSchedulerService = require('../services/autoSchedulerService');
+  res.json({ success: true, progress: autoSchedulerService.leadGenProgress });
+});
+
 module.exports = router;

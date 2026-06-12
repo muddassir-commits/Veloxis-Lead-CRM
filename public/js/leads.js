@@ -5,6 +5,8 @@
 const leads = {
   viewMode: 'table', // 'table' or 'kanban'
   leadsList: [],
+  filteredList: [],
+  pageSize: '50',
   selectedLeadIds: new Set(),
   activeLeadId: null,
 
@@ -35,23 +37,57 @@ const leads = {
     document.getElementById('crm-kanban-card').style.display = 'none';
 
     try {
-      const response = await api.getLeads();
+      const response = await api.getLeads({ limit: 1000 });
       this.leadsList = response.leads || [];
+      this.filteredList = this.leadsList;
       this.selectedLeadIds.clear();
       
       const selectAll = document.getElementById('crm-select-all');
       if (selectAll) selectAll.checked = false;
       this.updateBulkActionsBar();
+      this.populateFilters();
 
-      if (this.viewMode === 'table') {
-        this.renderTable();
-      } else {
-        this.renderKanban();
-      }
+      this.filterLeads();
     } catch (err) {
       app.showToast('error', `Failed to load CRM leads: ${err.message}`);
     } finally {
       document.getElementById('crm-loading').style.display = 'none';
+    }
+  },
+
+  populateFilters() {
+    const industries = new Set();
+    const cities = new Set();
+    this.leadsList.forEach(lead => {
+      if (lead.industry) industries.add(lead.industry);
+      if (lead.city) cities.add(lead.city);
+    });
+
+    const indSelect = document.getElementById('crm-filter-industry');
+    const citySelect = document.getElementById('crm-filter-city');
+
+    if (indSelect) {
+      const currentVal = indSelect.value;
+      indSelect.innerHTML = '<option value="">All Industries</option>';
+      Array.from(industries).sort().forEach(ind => {
+        const opt = document.createElement('option');
+        opt.value = ind;
+        opt.textContent = ind;
+        indSelect.appendChild(opt);
+      });
+      indSelect.value = currentVal;
+    }
+
+    if (citySelect) {
+      const currentVal = citySelect.value;
+      citySelect.innerHTML = '<option value="">All Cities</option>';
+      Array.from(cities).sort().forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city;
+        opt.textContent = city;
+        citySelect.appendChild(opt);
+      });
+      citySelect.value = currentVal;
     }
   },
 
@@ -74,6 +110,10 @@ const leads = {
   filterLeads() {
     const search = document.getElementById('crm-search').value.toLowerCase();
     const status = document.getElementById('crm-filter-status').value;
+    const score = document.getElementById('crm-filter-score').value;
+    const industry = document.getElementById('crm-filter-industry').value;
+    const city = document.getElementById('crm-filter-city').value;
+    const date = document.getElementById('crm-filter-date').value;
     
     const filtered = this.leadsList.filter(lead => {
       const matchSearch = !search || 
@@ -82,8 +122,17 @@ const leads = {
         (lead.email && lead.email.toLowerCase().includes(search));
         
       const matchStatus = !status || lead.status === status;
-      return matchSearch && matchStatus;
+      const matchScore = !score || lead.lead_score === score;
+      const matchIndustry = !industry || lead.industry === industry;
+      const matchCity = !city || lead.city === city;
+      
+      const leadDate = lead.created_at ? lead.created_at.split('T')[0] : '';
+      const matchDate = !date || leadDate === date;
+      
+      return matchSearch && matchStatus && matchScore && matchIndustry && matchCity && matchDate;
     });
+
+    this.filteredList = filtered;
 
     if (this.viewMode === 'table') {
       this.renderTable(filtered);
@@ -97,14 +146,31 @@ const leads = {
     const tbody = document.getElementById('crm-table-body');
     tbody.innerHTML = '';
     
-    document.getElementById('crm-showing-count').textContent = list.length;
+    // Update total count
+    const totalCountEl = document.getElementById('crm-total-count');
+    if (totalCountEl) {
+      totalCountEl.textContent = list.length;
+    }
 
-    if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No leads in CRM. Run Lead Generator to scrape new leads.</td></tr>';
+    // Get current limit from select element
+    const sizeSelect = document.getElementById('crm-page-size');
+    const pageSize = sizeSelect ? sizeSelect.value : (this.pageSize || '50');
+
+    // Slice list
+    let slicedList = list;
+    if (pageSize !== 'all') {
+      const limit = parseInt(pageSize, 10);
+      slicedList = list.slice(0, limit);
+    }
+
+    document.getElementById('crm-showing-count').textContent = slicedList.length;
+
+    if (slicedList.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">No leads in CRM. Click "Auto-Generate Leads" to scrape new leads.</td></tr>';
       return;
     }
 
-    list.forEach(lead => {
+    slicedList.forEach(lead => {
       const tr = document.createElement('tr');
       tr.style.cursor = 'pointer';
       tr.addEventListener('click', (e) => {
@@ -117,10 +183,10 @@ const leads = {
 
       tr.innerHTML = `
         <td><input type="checkbox" class="crm-item-check" data-id="${lead.id}" ${isChecked ? 'checked' : ''} onclick="leads.handleRowCheck(event, '${lead.id}')"></td>
-        <td style="font-weight: 600;">${lead.name}</td>
-        <td>${lead.company || '<span style="color:var(--text-muted);">None</span>'}</td>
-        <td>${lead.email || '<span style="color:var(--text-muted);font-style:italic;">No Email</span>'}</td>
-        <td>${lead.website ? `<a href="${lead.website}" target="_blank" style="color:var(--cyan);text-decoration:none;"><i data-lucide="link-2" style="width:12px;height:12px;display:inline-block;vertical-align:middle;"></i> Website</a>` : '<span style="color:var(--text-muted);">None</span>'}</td>
+        <td class="lead-name-cell" title="${lead.name}">${lead.name}</td>
+        <td class="company-cell" title="${lead.company || ''}">${lead.company || '<span style="color:var(--text-muted);">None</span>'}</td>
+        <td class="email-cell" title="${lead.email || ''}">${lead.email || '<span style="color:var(--text-muted);font-style:italic;">No Email</span>'}</td>
+        <td class="website-cell">${lead.website ? `<a href="${lead.website}" target="_blank" style="color:var(--cyan);text-decoration:none;"><i data-lucide="link-2" style="width:12px;height:12px;display:inline-block;vertical-align:middle;"></i> Website</a>` : '<span style="color:var(--text-muted);">None</span>'}</td>
         <td><span class="badge badge-${lead.status.toLowerCase().replace(' ', '')}">${lead.status}</span></td>
         <td><span class="score-badge score-${lead.lead_score.toLowerCase()}">${lead.lead_score}</span></td>
         <td>
@@ -135,6 +201,69 @@ const leads = {
 
     lucide.createIcons();
     document.getElementById('crm-table-card').style.display = 'block';
+  },
+
+  changePageSize(size) {
+    this.pageSize = size;
+    this.renderTable(this.filteredList);
+  },
+
+  exportToCSV() {
+    const list = this.filteredList || this.leadsList;
+    if (!list || list.length === 0) {
+      app.showToast('warning', 'No leads to export');
+      return;
+    }
+
+    // Define CSV headers
+    const headers = ['Name', 'Company', 'Email', 'Website', 'Status', 'Lead Score', 'City', 'Industry', 'Created At'];
+
+    // Map rows
+    const rows = list.map(lead => [
+      lead.name || '',
+      lead.company || '',
+      lead.email || '',
+      lead.website || '',
+      lead.status || '',
+      lead.lead_score || '',
+      lead.city || '',
+      lead.industry || '',
+      lead.created_at || ''
+    ]);
+
+    // Helper to escape CSV values
+    const escapeCSV = (val) => {
+      if (val === null || val === undefined) return '';
+      let str = String(val);
+      // Escape double quotes
+      str = str.replace(/"/g, '""');
+      // Wrap in quotes if containing separator or quotes or newlines
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return `"${str}"`;
+      }
+      return str;
+    };
+
+    // Construct CSV content with UTF-8 BOM
+    const csvContent = [
+      headers.map(escapeCSV).join(','),
+      ...rows.map(row => row.map(escapeCSV).join(','))
+    ].join('\r\n');
+
+    // Create a Blob with UTF-8 BOM (\uFEFF)
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create temporary link and trigger download
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `leads_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    app.showToast('success', `Exported ${list.length} leads successfully!`);
   },
 
   handleRowCheck(e, id) {
@@ -467,6 +596,22 @@ const leads = {
       this.loadLeads();
     } catch (err) {
       app.showToast('error', `Bulk sequence trigger failed: ${err.message}`);
+    }
+  },
+
+  async bulkDelete() {
+    if (this.selectedLeadIds.size === 0) return;
+    if (!confirm(`Are you sure you want to delete the ${this.selectedLeadIds.size} selected leads?`)) return;
+    
+    app.showToast('info', `Deleting ${this.selectedLeadIds.size} selected leads...`);
+    try {
+      const res = await api.bulkDeleteLeads(Array.from(this.selectedLeadIds));
+      app.showToast('success', `${res.count} leads deleted successfully.`);
+      this.selectedLeadIds.clear();
+      this.updateBulkActionsBar();
+      this.loadLeads();
+    } catch (err) {
+      app.showToast('error', `Bulk delete failed: ${err.message}`);
     }
   },
 
@@ -838,6 +983,306 @@ const leads = {
       return '<span class="badge" style="font-size:10px; background:var(--danger); color:white; font-weight:700; border-radius:12px;">Inactive ❌</span>';
     }
     return '<span class="badge" style="font-size:10px; background:rgba(255,255,255,0.05); color:var(--text-secondary); font-weight:700; border-radius:12px;">Unknown ❓</span>';
+  },
+
+  openAutoGenModal() {
+    document.getElementById('modal-auto-gen-form').reset();
+    document.getElementById('modal-auto-gen').classList.add('open');
+    this.updateAutoGenRecommendations();
+  },
+
+  closeAutoGenModal() {
+    document.getElementById('modal-auto-gen').classList.remove('open');
+  },
+
+  async startAutoGen(e) {
+    e.preventDefault();
+    const industry = document.getElementById('autogen-input-industry').value;
+    const city = document.getElementById('autogen-input-city').value;
+    const count = parseInt(document.getElementById('autogen-input-count').value);
+    const mode = document.getElementById('autogen-input-mode').value;
+
+    this.closeAutoGenModal();
+
+    // Reset progress view
+    const progressModal = document.getElementById('modal-auto-gen-progress');
+    progressModal.classList.add('open');
+    document.getElementById('autogen-progress-text').textContent = 'Launching backend lead generator...';
+    document.getElementById('autogen-progress-bar').style.width = '0%';
+    document.getElementById('autogen-progress-count').textContent = '0';
+
+    try {
+      await api.triggerAutoGenLeads(count, industry, city, mode);
+      app.showToast('info', 'Lead generation started in the background.');
+
+      // Start polling status
+      this.pollAutoGenStatus(count);
+    } catch (err) {
+      app.showToast('error', `Failed to start auto-generation: ${err.message}`);
+      progressModal.classList.remove('open');
+    }
+  },
+
+  pollAutoGenStatus(targetCount) {
+    const progressModal = document.getElementById('modal-auto-gen-progress');
+    
+    const intervalId = setInterval(async () => {
+      try {
+        const res = await api.getAutoGenStatus();
+        const prog = res.progress;
+
+        if (prog) {
+          document.getElementById('autogen-progress-text').textContent = prog.statusText || 'Scraping...';
+          document.getElementById('autogen-progress-count').textContent = prog.insertedCount || '0';
+
+          const pct = Math.min(Math.round(((prog.insertedCount || 0) / targetCount) * 100), 100);
+          document.getElementById('autogen-progress-bar').style.width = `${pct}%`;
+
+          if (!prog.running) {
+            clearInterval(intervalId);
+            setTimeout(() => {
+              progressModal.classList.remove('open');
+              app.showToast('success', `Completed: Generated ${prog.insertedCount} verified leads!`);
+              this.loadLeads();
+            }, 2000);
+          }
+        }
+      } catch (err) {
+        console.error('Error polling lead gen status:', err);
+      }
+    }, 2500);
+  },
+
+  updateAutoGenRecommendations() {
+    const now = new Date();
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const istTime = new Date(utc + (3600000 * 5.5));
+    const istHour = istTime.getHours();
+    
+    let recommendation = {
+      region: '',
+      industry: '',
+      industryVal: '',
+      cityVal: '',
+      reason: ''
+    };
+
+    if (istHour === 0) {
+      recommendation = {
+        region: 'US West Coast (Morning/Midday)',
+        industry: 'Digital Marketing & Software Agencies',
+        industryVal: 'Software Agency',
+        cityVal: 'Los Angeles',
+        reason: 'PST timezone morning block. Perfect for engaging dev and agency partners.'
+      };
+    } else if (istHour === 1) {
+      recommendation = {
+        region: 'US West Coast (Midday)',
+        industry: 'Solar Installation Companies',
+        industryVal: 'Solar Installer',
+        cityVal: 'Los Angeles',
+        reason: 'Solar residential inquiries peak around midday on the West Coast.'
+      };
+    } else if (istHour === 2) {
+      recommendation = {
+        region: 'US West Coast / Mid-Pacific',
+        industry: 'HVAC & Home Services Contractors',
+        industryVal: 'HVAC Contractor',
+        cityVal: 'Los Angeles',
+        reason: 'Late afternoon local time. High volume AC/heating repair slots are opening.'
+      };
+    } else if (istHour === 3) {
+      recommendation = {
+        region: 'New Zealand (Morning)',
+        industry: 'Home Remodeling & Construction',
+        industryVal: 'Home Remodeling',
+        cityVal: 'Auckland',
+        reason: 'It is mid-morning in Auckland. Local home builders are starting their day.'
+      };
+    } else if (istHour === 4) {
+      recommendation = {
+        region: 'Oceania (East Australia & NZ)',
+        industry: 'Gyms & Fitness Centers',
+        industryVal: 'Gyms',
+        cityVal: 'Sydney',
+        reason: 'Mid-morning in Sydney. Gym owners and fitness managers are active.'
+      };
+    } else if (istHour === 5) {
+      recommendation = {
+        region: 'Oceania (Central & West Australia)',
+        industry: 'Dental Clinics & Dentists',
+        industryVal: 'Dentist',
+        cityVal: 'Sydney',
+        reason: 'Late morning in Adelaide/Perth. Optimal for private elective care clinics.'
+      };
+    } else if (istHour === 6) {
+      recommendation = {
+        region: 'West Australia & Japan (JST)',
+        industry: 'Plastic Surgeons & MedSpas',
+        industryVal: 'MedSpa',
+        cityVal: 'Sydney',
+        reason: 'Early afternoon local time. Ideal for elective aesthetic consultations bookings.'
+      };
+    } else if (istHour === 7) {
+      recommendation = {
+        region: 'East Asia (Singapore & Hong Kong)',
+        industry: 'E-Commerce Brands & Shopify Stores',
+        industryVal: 'E-commerce Store',
+        cityVal: 'Singapore',
+        reason: 'Singapore morning business block is active. Great for Shopify brands.'
+      };
+    } else if (istHour === 8) {
+      recommendation = {
+        region: 'Southeast Asia / Singapore',
+        industry: 'Business & Life Coaches',
+        industryVal: 'Coaches & Consultants',
+        cityVal: 'Singapore',
+        reason: 'Late morning in KL/Singapore. Coaches and advisors are reviewing bookings.'
+      };
+    } else if (istHour === 9) {
+      recommendation = {
+        region: 'India (IST Morning)',
+        industry: 'Real Estate Agencies & Developers',
+        industryVal: 'Real Estate Developer',
+        cityVal: 'Gurgaon',
+        reason: 'Indian business day is commencing. Real estate builders are active in Gurgaon/Noida.'
+      };
+    } else if (istHour === 10) {
+      recommendation = {
+        region: 'India & Central Asia',
+        industry: 'Educational & Coaching Institutes',
+        industryVal: 'Education / Coaching',
+        cityVal: 'Noida',
+        reason: 'Late morning in Delhi NCR. Coaching centers and test preps are open.'
+      };
+    } else if (istHour === 11) {
+      recommendation = {
+        region: 'Middle East / Gulf Region (GST)',
+        industry: 'Luxury Gulf Real Estate Developers',
+        industryVal: 'Real Estate Developer',
+        cityVal: 'Dubai',
+        reason: 'Dubai/Riyadh local morning. The absolute prime slot for high-ticket property builders.'
+      };
+    } else if (istHour === 12) {
+      recommendation = {
+        region: 'Middle East & Russia',
+        industry: 'Local Restaurants & Cafes',
+        industryVal: 'Restaurant',
+        cityVal: 'Dubai',
+        reason: 'Lunch hour block. Restaurant managers are reviewing online booking parameters.'
+      };
+    } else if (istHour === 13) {
+      recommendation = {
+        region: 'Eastern Europe & South Africa',
+        industry: 'Dental Clinics & Dentists',
+        industryVal: 'Dentist',
+        cityVal: 'Johannesburg',
+        reason: 'Midday hours in Johannesburg/Athens. Good slot for dental practices.'
+      };
+    } else if (istHour === 14) {
+      recommendation = {
+        region: 'Central Europe (CET)',
+        industry: 'Beauty & Hair Salons',
+        industryVal: 'Beauty Salon',
+        cityVal: 'Berlin',
+        reason: 'Paris/Berlin morning. Perfect timing for boutique salons.'
+      };
+    } else if (istHour === 15) {
+      recommendation = {
+        region: 'Central & Western Europe',
+        industry: 'E-Commerce Brands & Shopify Stores',
+        industryVal: 'E-commerce Store',
+        cityVal: 'London',
+        reason: 'It is mid-afternoon in CET. Shopify e-commerce brands are active.'
+      };
+    } else if (istHour === 16) {
+      recommendation = {
+        region: 'United Kingdom (GMT/BST)',
+        industry: 'UK Real Estate Developers',
+        industryVal: 'Real Estate Developer',
+        cityVal: 'London',
+        reason: 'Prime morning block in London. Best for property builders and agencies.'
+      };
+    } else if (istHour === 17) {
+      recommendation = {
+        region: 'United Kingdom & West Africa',
+        industry: 'Law Firms & Attorneys',
+        industryVal: 'Law Firm',
+        cityVal: 'London',
+        reason: 'Late morning in the UK. Law firms are highly active.'
+      };
+    } else if (istHour === 18) {
+      recommendation = {
+        region: 'South America (BRT)',
+        industry: 'Digital Marketing & Software Agencies',
+        industryVal: 'Software Agency',
+        cityVal: 'Sao Paulo',
+        reason: 'Morning hours in Brazil. Great for outsourcing agency setups.'
+      };
+    } else if (istHour === 19) {
+      recommendation = {
+        region: 'US East Coast (EST)',
+        industry: 'US Real Estate Developers',
+        industryVal: 'Real Estate Developer',
+        cityVal: 'New York',
+        reason: 'EST morning block is active. Excellent for high-end developers in Hamptons/Miami.'
+      };
+    } else if (istHour === 20) {
+      recommendation = {
+        region: 'US East Coast (Midday)',
+        industry: 'Plastic Surgeons & MedSpas',
+        industryVal: 'MedSpa',
+        cityVal: 'New York',
+        reason: 'Midday hours in NY/Miami. Best for high-value aesthetic bookings.'
+      };
+    } else if (istHour === 21) {
+      recommendation = {
+        region: 'US East Coast & Central',
+        industry: 'Business & Life Coaches',
+        industryVal: 'Coaches & Consultants',
+        cityVal: 'Chicago',
+        reason: 'Late morning in Chicago/Dallas. Highly recommended for coaching programs.'
+      };
+    } else if (istHour === 22) {
+      recommendation = {
+        region: 'US Central & Mountain',
+        industry: 'Mortgage Brokers & Loan Officers',
+        industryVal: 'Mortgage Broker',
+        cityVal: 'Chicago',
+        reason: 'Midday hours in Central/Mountain region. Ideal for real estate financing brokers.'
+      };
+    } else { // istHour === 23
+      recommendation = {
+        region: 'US West Coast (PST)',
+        industry: 'Financial Advisors & Wealth Managers',
+        industryVal: 'Financial Advisor',
+        cityVal: 'San Francisco',
+        reason: 'Late morning in SF. High-net-worth wealth advisor prospects are active.'
+      };
+    }
+
+    const container = document.getElementById('autogen-recommendation-content');
+    if (container) {
+      container.innerHTML = `
+        <div style="font-weight:700; color:var(--cyan); margin-bottom:4px;">🔥 Active Now: ${recommendation.region}</div>
+        <p style="margin-bottom:8px; line-height:1.4;">${recommendation.reason}</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; border-top:1px solid rgba(255,255,255,0.05); padding-top:8px;">
+          <span>Target Niche: <strong>${recommendation.industry}</strong></span>
+          <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:11px; height:24px; border-radius:4px; display:inline-flex; align-items:center; gap:4px; border:1px solid rgba(0,242,254,0.3); color:var(--cyan); background:rgba(0,242,254,0.05);" onclick="leads.applyAutoGenRecommendation('${recommendation.industryVal}', '${recommendation.cityVal}')">
+            <i data-lucide="check" style="width:12px;height:12px;"></i> Apply Recommendation
+          </button>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+  },
+
+  applyAutoGenRecommendation(industry, city) {
+    const indSelect = document.getElementById('autogen-input-industry');
+    const citySelect = document.getElementById('autogen-input-city');
+    if (indSelect) indSelect.value = industry;
+    if (citySelect) citySelect.value = city;
+    app.showToast('success', `Applied recommendation: Sourcing ${industry} in ${city}.`);
   }
 };
 

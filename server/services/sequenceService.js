@@ -13,10 +13,10 @@ let cronTask = null;
  * Initialize and start the sequence cron scheduler
  */
 function startScheduler() {
-  console.log('⏰ Starting Outreach Sequence Cron Scheduler...');
+  console.log('⏰ Starting Outreach Sequence Cron Scheduler (30 Sec Interval)...');
   
-  // Runs every 10 minutes to check if any emails are scheduled for sending
-  cronTask = cron.schedule('*/10 * * * *', async () => {
+  // Runs every 30 seconds to check if any emails are scheduled for sending
+  cronTask = cron.schedule('*/30 * * * * *', async () => {
     console.log('⏰ Running scheduled outreach checks...');
     try {
       await processDueSequences();
@@ -135,14 +135,15 @@ async function sendSequenceStep(seq, scheduleConfig, emailSig) {
     website: lead.website || '',
     industry: lead.industry || 'your sector',
     city: lead.city || 'your city',
+    deep_research: lead.deep_research || lead.notes || '',
     signature: emailSig
   };
 
   const compiledSubject = templateEngine.compileTemplate(template.subject, dataContext);
   const compiledBody = templateEngine.compileTemplate(template.body, dataContext);
 
-  // Convert plain text breaks into HTML breaks for email representation
-  const htmlContent = compiledBody.replace(/\n/g, '<br/>');
+  // Convert plain text breaks into HTML breaks for email representation, handling both literal \n and real newlines
+  const htmlContent = compiledBody.replace(/\\n/g, '\n').replace(/\n/g, '<br/>');
 
   // 3. Create tracker ID and setup history logs
   const trackerId = uuidv4(); // Unique ID for open tracking
