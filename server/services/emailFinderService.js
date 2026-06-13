@@ -585,6 +585,7 @@ ${solutions.join('\n')}`;
 module.exports = {
   findEmailForLead,
   scrapeWebsiteForEmails,
+  scrapeWebsiteWithPuppeteer,
   generateCommonPatterns,
   searchCompanyWebsite,
   analyzeWebsiteGaps,
