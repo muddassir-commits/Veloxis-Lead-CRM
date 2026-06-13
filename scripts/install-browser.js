@@ -3,13 +3,19 @@ const fs = require('fs');
 const path = require('path');
 
 function installBrowser() {
+  console.log('--- Puppeteer Installation Environment Diagnostics ---');
+  console.log('PUPPETEER_CACHE_DIR:', process.env.PUPPETEER_CACHE_DIR);
+  console.log('PUPPETEER_SKIP_CHROMIUM_DOWNLOAD:', process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD);
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('------------------------------------------------------');
+
   if (process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD === 'true') {
     console.log('⏭️ Skipping Puppeteer browser download (PUPPETEER_SKIP_CHROMIUM_DOWNLOAD is true).');
     return;
   }
 
-  // Detect and resolve cache directory path
-  const cachePath = process.env.PUPPETEER_CACHE_DIR || path.join(__dirname, '../.cache/puppeteer');
+  // Detect and resolve cache directory path (aligned with .puppeteerrc.cjs)
+  const cachePath = process.env.PUPPETEER_CACHE_DIR || path.join(__dirname, '../puppeteer-cache');
 
   // Clean up existing directory to prevent corrupt cache errors
   if (fs.existsSync(cachePath)) {
