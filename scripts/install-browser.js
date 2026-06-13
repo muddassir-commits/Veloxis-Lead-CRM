@@ -1,9 +1,25 @@
 const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 function installBrowser() {
   if (process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD === 'true') {
     console.log('⏭️ Skipping Puppeteer browser download (PUPPETEER_SKIP_CHROMIUM_DOWNLOAD is true).');
     return;
+  }
+
+  // Detect and resolve cache directory path
+  const cachePath = process.env.PUPPETEER_CACHE_DIR || path.join(__dirname, '../.cache/puppeteer');
+
+  // Clean up existing directory to prevent corrupt cache errors
+  if (fs.existsSync(cachePath)) {
+    console.log(`🧹 Found existing cache folder: ${cachePath}. Cleaning it up to prevent corrupt state...`);
+    try {
+      fs.rmSync(cachePath, { recursive: true, force: true });
+      console.log('✅ Cleaned cache successfully.');
+    } catch (err) {
+      console.warn('⚠️ Warning: Failed to clean cache folder:', err.message);
+    }
   }
 
   console.log('🕵️ Preparing to install Chrome for Puppeteer...');
