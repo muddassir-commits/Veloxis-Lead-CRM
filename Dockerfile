@@ -14,6 +14,8 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 COPY package*.json ./
+COPY scripts/ ./scripts/
+COPY .puppeteerrc.cjs ./
 RUN npm install --omit=dev
 COPY . .
 EXPOSE 10000

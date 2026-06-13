@@ -51,6 +51,7 @@ Thumbs.db
 scratch/
 public/assets/dashboard_verified.png
 public/assets/verification/
+build.md
 
 # Puppeteer browser cache
 puppeteer-cache/
