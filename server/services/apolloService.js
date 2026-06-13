@@ -135,7 +135,7 @@ async function fallbackFreeB2BSearch({ keywords, titles, locations, limit = 10 }
   try {
     page = await browserManager.newPage();
     console.log(`🌐 Loading DuckDuckGo JS search page: ${searchUrl}`);
-    await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
     
     // Wait for JS to render results
     await new Promise(r => setTimeout(r, 6000));

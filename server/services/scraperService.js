@@ -78,7 +78,7 @@ async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
     // Construct search URL
     const searchUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}+${encodeURIComponent(region)}`;
     console.log(`🌐 Navigating to: ${searchUrl}`);
-    await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
     
     // Handle consent redirection
     await handleGoogleConsent(page);
@@ -144,8 +144,8 @@ async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
         const metaTexts = parent ? Array.from(parent.querySelectorAll('.W4EwHf, .fontBodyMedium')) : [];
         for (const meta of metaTexts) {
           const text = meta.textContent;
-          // Clean category text
-          if (text && !text.includes('·') && text.length > 2 && text.length < 30) {
+          // Clean category text - skip if it is a rating number (e.g. "4.6")
+          if (text && !text.includes('·') && text.length > 2 && text.length < 30 && !/^[0-9.]+$/.test(text.trim())) {
             category = text.trim();
             break;
           }
@@ -168,10 +168,20 @@ async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
       console.log(`➡️  Detail scraping place ${i + 1}/${listings.length}: ${item.name}`);
       
       try {
-        await page.goto(item.url, { waitUntil: 'networkidle2', timeout: 30000 });
+        await page.goto(item.url, { waitUntil: 'domcontentloaded', timeout: 20000 });
         
         // Handle consent redirection
         await handleGoogleConsent(page);
+        
+        // Wait for h1 to ensure page shell is loaded
+        try {
+          await page.waitForSelector('h1', { timeout: 8000 });
+        } catch (h1Err) {
+          console.warn('⚠️ H1 title selector not found on detail page, attempting to scrape anyway');
+        }
+        
+        // Brief settle time for dynamic details to render
+        await new Promise(r => setTimeout(r, 1500));
         
         const details = await page.evaluate(() => {
           // Select buttons with text patterns, aria-labels, or icons
@@ -283,7 +293,7 @@ async function scrapeSocialProfiles(platform, niche, city, limit = 20) {
     const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
     
     console.log(`🌐 Loading DuckDuckGo SERP URL: ${searchUrl}`);
-    await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 20000 });
     
     // Check if result containers are found
     try {

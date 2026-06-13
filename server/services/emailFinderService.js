@@ -91,7 +91,7 @@ async function scrapeWebsiteWithPuppeteer(websiteUrl) {
     page = await browserManager.newPage();
     
     // Set timeout to 25s
-    await page.goto(normalized, { waitUntil: 'networkidle2', timeout: 25000 });
+    await page.goto(normalized, { waitUntil: 'domcontentloaded', timeout: 20000 });
     await new Promise(r => setTimeout(r, 2000)); // wait for transitions
     
     // 1. Scan homepage HTML (tag boundaries prevent text squashing)
@@ -143,7 +143,7 @@ async function scrapeWebsiteWithPuppeteer(websiteUrl) {
     for (const link of subpages) {
       console.log(`🔗 Puppeteer scanning secondary link: ${link}`);
       try {
-        await page.goto(link, { waitUntil: 'networkidle2', timeout: 15000 });
+        await page.goto(link, { waitUntil: 'domcontentloaded', timeout: 15000 });
         await new Promise(r => setTimeout(r, 1000));
         
         const subHtml = await page.evaluate(() => document.documentElement.innerHTML);
@@ -286,7 +286,7 @@ async function searchCompanyWebsite(companyName) {
     const query = `"${companyName}" official website`;
     const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
     
-    await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 15000 });
+    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
     
     const firstUrl = await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll('.web-result .result__title a'));
