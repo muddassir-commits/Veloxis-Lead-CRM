@@ -1,14 +1,6 @@
 // Initialize log interceptor at the very beginning to capture all logs
 require('./services/logStreamService');
 
-// Auto-install browser on startup for native Node environments (Render Node service)
-try {
-  const installBrowser = require('../scripts/install-browser');
-  installBrowser();
-} catch (err) {
-  console.error('❌ Failed to run browser installation check:', err.message);
-}
-
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
