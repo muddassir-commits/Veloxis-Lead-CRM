@@ -6,6 +6,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PUPPETEER_CACHE_DIR
+        value: /opt/render/project/src/puppeteer-cache
       - key: PORT
         value: 10000
       - key: SMTP_HOST

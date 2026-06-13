@@ -24,9 +24,9 @@ function installBrowser() {
 
   console.log('🕵️ Preparing to install Chrome for Puppeteer...');
   try {
-    console.log('📥 Running: npx puppeteer install chrome');
+    console.log('📥 Running: npx puppeteer browsers install chrome');
     // Capture output to stream it to CRM console
-    const output = execSync('npx puppeteer install chrome', { encoding: 'utf8' });
+    const output = execSync('npx puppeteer browsers install chrome', { encoding: 'utf8' });
     console.log(output);
     console.log('✅ Chrome browser successfully installed for Puppeteer.');
   } catch (err) {
