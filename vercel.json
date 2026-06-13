@@ -4,11 +4,11 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://veloxis-outreach-api.onrender.com/api/$1"
+      "dest": "https://veloxis-crm-docker.onrender.com/api/$1"
     },
     {
       "src": "/track/(.*)",
-      "dest": "https://veloxis-outreach-api.onrender.com/track/$1"
+      "dest": "https://veloxis-crm-docker.onrender.com/track/$1"
     },
     {
       "src": "/css/(.*)",

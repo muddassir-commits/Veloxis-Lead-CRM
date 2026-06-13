@@ -59,7 +59,7 @@ async function sendMail({ to, subject, text, html, trackerId }) {
     
     const backendUrl = isDev
       ? (isDefaultRenderUrl ? `http://localhost:${process.env.PORT || 5000}` : (process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`))
-      : (process.env.BACKEND_URL || 'https://veloxis-outreach-api.onrender.com');
+      : (process.env.BACKEND_URL || 'https://veloxis-crm-docker.onrender.com');
     
     const trackingPixelUrl = `${backendUrl}/track/${trackerId}.gif`;
     
