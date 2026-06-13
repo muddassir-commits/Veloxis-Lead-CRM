@@ -4,7 +4,7 @@
   "description": "Veloxis Global — Lead Generation & Outreach Command Center",
   "main": "server/index.js",
   "scripts": {
-    "start": "node server/index.js",
+    "start": "node --max-old-space-size=256 server/index.js",
     "dev": "nodemon server/index.js",
     "setup:email": "node scripts/setup-email.js",
     "setup:supabase": "node scripts/setup-supabase.js",

@@ -12,6 +12,8 @@ class BrowserManager {
   constructor() {
     this.browser = null;
     this.launchPromise = null;
+    this.activePages = 0;
+    this.closeTimer = null;
   }
 
   /**
@@ -43,6 +45,9 @@ class BrowserManager {
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--disable-extensions',
+            '--no-first-run',
+            '--no-zygote',
+            '--disable-features=site-per-process',
             '--window-size=1280,800'
           ]
         });
@@ -70,9 +75,18 @@ class BrowserManager {
    * Creates a new page optimized for scraping (blocks css, images, fonts, media)
    */
   async newPage() {
+    // Clear close timer since we are requesting a new page
+    if (this.closeTimer) {
+      clearTimeout(this.closeTimer);
+      this.closeTimer = null;
+    }
+
     const browserInstance = await this.getBrowser();
     const page = await browserInstance.newPage();
     
+    this.activePages++;
+    console.log(`[BrowserManager] Page opened. Active pages: ${this.activePages}`);
+
     // Set viewport and user agent
     await page.setViewport({ width: 1280, height: 800 });
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
@@ -88,13 +102,39 @@ class BrowserManager {
       }
     });
 
+    // Listen to page close event to track activity and auto-close browser when inactive
+    page.once('close', () => {
+      this.activePages = Math.max(0, this.activePages - 1);
+      console.log(`[BrowserManager] Page closed. Active pages: ${this.activePages}`);
+      if (this.activePages === 0) {
+        this.scheduleBrowserClose();
+      }
+    });
+
     return page;
+  }
+
+  scheduleBrowserClose() {
+    if (this.closeTimer) {
+      clearTimeout(this.closeTimer);
+    }
+    // Set 10 seconds timeout of inactivity before closing browser to save RAM
+    this.closeTimer = setTimeout(async () => {
+      if (this.activePages === 0) {
+        console.log('[BrowserManager] No active pages for 10s. Shutting down browser to free memory...');
+        await this.close();
+      }
+    }, 10000);
   }
 
   /**
    * Closes the active browser instance
    */
   async close() {
+    if (this.closeTimer) {
+      clearTimeout(this.closeTimer);
+      this.closeTimer = null;
+    }
     if (this.browser) {
       console.log('🌐 Shutting down active Singleton Browser...');
       try {
