@@ -77,8 +77,8 @@ const api = {
     return this.request(`/api/email/history/${id}/resend`, 'POST');
   },
 
-  async sendManualEmail(to, subject, body) {
-    return this.request('/api/email/send', 'POST', { to, subject, body });
+  async sendManualEmail(to, subject, body, leadId) {
+    return this.request('/api/email/send', 'POST', { to, subject, body, leadId });
   },
 
   async startSequence(leadId) {

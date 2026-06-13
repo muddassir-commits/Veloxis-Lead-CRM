@@ -7,17 +7,21 @@ const supabase = require('../services/supabaseService');
 // 1. POST - Send manual email to a lead
 router.post('/send', async (req, res) => {
   try {
-    const { to, subject, body } = req.body;
+    const { to, subject, body, leadId } = req.body;
     
     if (!to || !subject || !body) {
       return res.status(400).json({ success: false, error: 'to, subject, and body parameters are required' });
     }
 
+    const { v4: uuidv4 } = require('uuid');
+    const trackerId = leadId ? uuidv4() : null;
+
     const htmlContent = body.replace(/\\n/g, '\n').replace(/\n/g, '<br/>');
     const result = await emailService.sendMail({
       to,
       subject,
-      html: `<html><body>${htmlContent}</body></html>`
+      html: `<html><body>${htmlContent}</body></html>`,
+      trackerId
     });
 
     if (result.success) {
@@ -27,7 +31,63 @@ router.post('/send', async (req, res) => {
       } catch (nErr) {
         console.error('Failed to dispatch manual email success notification:', nErr.message);
       }
-      res.json({ success: true, messageId: result.messageId });
+
+      if (leadId) {
+        try {
+          // Check if sequence exists
+          let { data: seq, error: seqFetchErr } = await supabase
+            .from('sequences')
+            .select('id')
+            .eq('lead_id', leadId)
+            .maybeSingle();
+
+          if (seqFetchErr) throw seqFetchErr;
+
+          if (!seq) {
+            // Auto-create sequence for this lead in 'Stopped' status
+            const { data: newSeq, error: seqInsertErr } = await supabase
+              .from('sequences')
+              .insert({
+                lead_id: leadId,
+                status: 'Stopped',
+                current_step: 1
+              })
+              .select('id')
+              .single();
+
+            if (seqInsertErr) throw seqInsertErr;
+            seq = newSeq;
+          }
+
+          // Log in sequence history
+          await supabase.from('sequence_history').insert({
+            sequence_id: seq.id,
+            lead_id: leadId,
+            step: 0, // 0 indicates manual email
+            template_id: null,
+            email_id: trackerId,
+            status: 'Sent'
+          });
+
+          // Create empty email tracking record
+          await supabase.from('email_tracking').insert({
+            lead_id: leadId,
+            email_id: trackerId,
+            opens: 0
+          });
+
+          // Update lead status to Contacted
+          await supabase.from('leads').update({
+            status: 'Contacted',
+            updated_at: new Date().toISOString()
+          }).eq('id', leadId);
+
+        } catch (dbErr) {
+          console.error('⚠️ Failed to log manual email database entry:', dbErr.message);
+        }
+      }
+
+      res.json({ success: true, messageId: result.messageId, trackerId });
     } else {
       try {
         const notificationService = require('../services/notificationService');
@@ -35,6 +95,46 @@ router.post('/send', async (req, res) => {
       } catch (nErr) {
         console.error('Failed to dispatch manual email failure notification:', nErr.message);
       }
+
+      if (leadId) {
+        try {
+          // Check if sequence exists
+          let { data: seq } = await supabase
+            .from('sequences')
+            .select('id')
+            .eq('lead_id', leadId)
+            .maybeSingle();
+
+          if (!seq) {
+            const { data: newSeq } = await supabase
+              .from('sequences')
+              .insert({
+                lead_id: leadId,
+                status: 'Stopped',
+                current_step: 1
+              })
+              .select('id')
+              .single();
+            seq = newSeq;
+          }
+
+          if (seq) {
+            // Log failure in sequence history
+            const errorStatus = `Failed: ${result.error || 'SMTP Error'}`.substring(0, 50);
+            await supabase.from('sequence_history').insert({
+              sequence_id: seq.id,
+              lead_id: leadId,
+              step: 0,
+              template_id: null,
+              email_id: trackerId || uuidv4(),
+              status: errorStatus
+            });
+          }
+        } catch (dbErr) {
+          console.error('⚠️ Failed to log manual email failure database entry:', dbErr.message);
+        }
+      }
+
       res.status(500).json({ success: false, error: result.error });
     }
   } catch (err) {
@@ -173,7 +273,7 @@ router.get('/sequences', async (req, res) => {
   }
 });
 
-// 9. GET - Retrieve all sent emails (sequence history) for Sent Mail screen
+// 9. GET - Retrieve all sent and failed emails (sequence history) for Sent Mail screen
 router.get('/sent', async (req, res) => {
   try {
     const { data: history, error } = await supabase
@@ -183,7 +283,6 @@ router.get('/sent', async (req, res) => {
         leads (id, name, company, email, website, country, city, industry),
         templates (id, name, type, subject, body, principle)
       `)
-      .eq('status', 'Sent')
       .order('sent_at', { ascending: false });
 
     if (error) throw error;
@@ -229,8 +328,17 @@ router.get('/sent', async (req, res) => {
         signature: emailSig
       };
 
-      const compiledSubject = templateEngine.compileTemplate(template.subject || '', dataContext).replace(/\\n/g, '\n');
-      const compiledBody = templateEngine.compileTemplate(template.body || '', dataContext).replace(/\\n/g, '\n');
+      const isManual = h.step === 0;
+      let compiledSubject;
+      let compiledBody;
+
+      if (isManual) {
+        compiledSubject = `Manual Direct Email`;
+        compiledBody = `Direct manual email sent via the CRM. The full message text is logged under the notes section of the prospect's profile page.`;
+      } else {
+        compiledSubject = templateEngine.compileTemplate(template.subject || '', dataContext).replace(/\\n/g, '\n');
+        compiledBody = templateEngine.compileTemplate(template.body || '', dataContext).replace(/\\n/g, '\n');
+      }
 
       return {
         id: h.id,
@@ -253,9 +361,9 @@ router.get('/sent', async (req, res) => {
           country: lead.country
         },
         template: {
-          name: template.name,
-          principle: template.principle,
-          type: template.type
+          name: isManual ? 'Manual Direct Email' : (template.name || 'Unknown Template'),
+          principle: isManual ? 'Personalized Direct Outreach' : (template.principle || 'N/A'),
+          type: isManual ? 'Email' : (template.type || 'Email')
         },
         subject: compiledSubject,
         body: compiledBody

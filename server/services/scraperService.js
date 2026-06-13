@@ -228,13 +228,30 @@ async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
         // Parse City/Country from address
         let city = 'Unknown';
         let country = region;
+        let address = details.address;
         
-        if (details.address) {
-          const parts = details.address.split(',');
-          if (parts.length > 2) {
-            city = parts[parts.length - 3].trim();
-            // Clean up zip codes from city names
-            city = city.replace(/[0-9\s-]/g, '');
+        if (address) {
+          // Clean address: remove location icon prefix character (usually non-ASCII at the start)
+          address = address.replace(/^[^a-zA-Z0-9\s,]+/, '').trim();
+          
+          const parts = address.split(',');
+          if (parts.length >= 2) {
+            const lastPart = parts[parts.length - 1].trim();
+            const hasCountry = lastPart.toLowerCase().includes('united states') || 
+                               lastPart.toLowerCase().includes('canada') || 
+                               lastPart.toLowerCase().includes('india') || 
+                               lastPart.toLowerCase().includes('zealand') ||
+                               lastPart.toLowerCase().includes('kingdom') ||
+                               lastPart.length > 15 || 
+                               !/[0-9]/.test(lastPart);
+            
+            let cityIdx = parts.length - 2;
+            if (hasCountry && parts.length >= 3) {
+              cityIdx = parts.length - 3;
+            }
+            
+            let cityPart = parts[cityIdx].trim();
+            city = cityPart.replace(/[0-9-]/g, '').trim();
           }
         }
 
@@ -244,7 +261,7 @@ async function scrapeGoogleMaps(query, region = 'India', maxResults = 20) {
           industry: item.industry,
           phone: details.phone,
           website: details.website,
-          address: details.address,
+          address: address,
           city: city,
           country: country
         });

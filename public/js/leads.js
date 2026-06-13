@@ -932,7 +932,7 @@ const leads = {
 
     app.showToast('info', 'Dispatching email outreach...');
     try {
-      const res = await api.sendManualEmail(to, subject, body);
+      const res = await api.sendManualEmail(to, subject, body, this.outreachLead ? this.outreachLead.id : null);
       app.showToast('success', `Outreach email sent successfully to ${to}.`);
 
       // Log history in database if checked

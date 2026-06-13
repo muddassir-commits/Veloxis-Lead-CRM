@@ -52,7 +52,7 @@ const sentMail = {
   },
 
   updateFilterUI() {
-    const filters = ['all', 'opened', 'unopened'];
+    const filters = ['all', 'sent', 'opened', 'failed'];
     filters.forEach(f => {
       const btn = document.getElementById(`sent-filter-${f}`);
       if (btn) {
@@ -79,10 +79,12 @@ const sentMail = {
         email.body.toLowerCase().includes(query);
 
       // 2. Status Filter
-      if (this.statusFilter === 'opened') {
-        return matchesQuery && email.opens > 0;
-      } else if (this.statusFilter === 'unopened') {
-        return matchesQuery && email.opens === 0;
+      if (this.statusFilter === 'sent') {
+        return matchesQuery && email.status === 'Sent';
+      } else if (this.statusFilter === 'opened') {
+        return matchesQuery && email.status === 'Sent' && email.opens > 0;
+      } else if (this.statusFilter === 'failed') {
+        return matchesQuery && email.status.startsWith('Failed');
       }
       return matchesQuery;
     });
@@ -95,12 +97,13 @@ const sentMail = {
     listContainer.innerHTML = '';
 
     if (emails.length === 0) {
-      listContainer.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:30px; font-size:13px;">No sent emails match the filters.</div>';
+      listContainer.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:30px; font-size:13px;">No outreach records match the filters.</div>';
       return;
     }
 
     emails.forEach(email => {
       const card = document.createElement('div');
+      const isFailed = email.status.startsWith('Failed');
       card.className = `sent-email-card card ${this.activeEmailId === email.id ? 'active-email' : ''}`;
       card.style.padding = '12px 14px';
       card.style.borderRadius = '8px';
@@ -111,6 +114,10 @@ const sentMail = {
       card.style.flexDirection = 'column';
       card.style.gap = '6px';
       card.style.transition = 'var(--transition-fast)';
+
+      if (isFailed) {
+        card.style.borderLeft = '3px solid var(--danger)';
+      }
 
       // Hover effects
       card.onmouseover = () => {
@@ -136,11 +143,15 @@ const sentMail = {
       });
 
       let trackingBadge = '';
-      if (email.opens > 0) {
+      if (isFailed) {
+        trackingBadge = `<span class="badge" style="background:var(--danger-glow); color:var(--danger); border:1px solid rgba(239,68,68,0.3); text-transform:none; font-size:10px; padding:2px 6px;">❌ Failed</span>`;
+      } else if (email.opens > 0) {
         trackingBadge = `<span class="badge" style="background:var(--success-glow); color:var(--success); border:1px solid rgba(16,185,129,0.3); text-transform:none; font-size:10px; padding:2px 6px;">👁️ Opened (${email.opens})</span>`;
       } else {
-        trackingBadge = `<span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted); text-transform:none; font-size:10px; padding:2px 6px;">Unopened</span>`;
+        trackingBadge = `<span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted); text-transform:none; font-size:10px; padding:2px 6px;">Sent</span>`;
       }
+
+      const stepText = email.step === 0 ? 'Manual' : `Step ${email.step}`;
 
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -151,7 +162,7 @@ const sentMail = {
           ${email.subject}
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-          <span class="badge badge-researched" style="font-size:9px; padding:2px 6px;">Step ${email.step}</span>
+          <span class="badge badge-researched" style="font-size:9px; padding:2px 6px;">${stepText}</span>
           ${trackingBadge}
         </div>
       `;
@@ -173,6 +184,7 @@ const sentMail = {
 
     const sentDate = new Date(email.sent_at).toLocaleString();
     const lastOpenedDate = email.last_opened_at ? new Date(email.last_opened_at).toLocaleString() : 'N/A';
+    const isFailed = email.status.startsWith('Failed');
 
     // Parse User Agents list
     const parsedDevices = (email.user_agents || []).map(ua => {
@@ -199,6 +211,41 @@ const sentMail = {
       `;
     }
 
+    let errorBanner = '';
+    if (isFailed) {
+      const errorMsg = email.status.replace('Failed: ', '');
+      errorBanner = `
+        <div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); border-radius:8px; padding:12px 16px; display:flex; align-items:center; gap:12px; color:var(--danger); font-size:13px; line-height:1.5;">
+          <i data-lucide="alert-octagon" style="width:18px; height:18px; flex-shrink:0;"></i>
+          <div>
+            <strong>Email Dispatch Failed:</strong> ${errorMsg || 'SMTP/Connection Error'}
+          </div>
+        </div>
+      `;
+    }
+
+    let trackerStatsHtml = '';
+    if (!isFailed) {
+      trackerStatsHtml = `
+        <!-- Tracker details card -->
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:12px; border-radius:8px; display:flex; flex-direction:column; gap:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <i data-lucide="eye" style="color:var(--success); width:16px; height:16px;"></i>
+              <span style="font-size:13px; font-weight:600;">Open Tracker Stats</span>
+            </div>
+            <div style="display:flex; gap:15px; font-size:12px;">
+              <div>Opens: <strong id="sent-detail-opens" style="color:var(--success);">${email.opens}</strong></div>
+              <div>Last Opened: <strong id="sent-detail-last-opened" style="color:var(--text-primary);">${lastOpenedDate}</strong></div>
+            </div>
+          </div>
+          ${auditHtml}
+        </div>
+      `;
+    }
+
+    const stepLabel = email.step === 0 ? 'Manual Direct' : `Step ${email.step}`;
+
     detailContainer.innerHTML = `
       <!-- Detail Header Controls -->
       <div style="border-bottom:1px solid var(--border-color); padding-bottom:16px; display:flex; flex-direction:column; gap:12px;">
@@ -219,10 +266,12 @@ const sentMail = {
           </div>
           <div style="text-align:right;">
             <div>Sent: <span>${sentDate}</span></div>
-            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Sequence Step: <strong>Step ${email.step}</strong></div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Sequence Step: <strong>${stepLabel}</strong></div>
           </div>
         </div>
       </div>
+
+      ${errorBanner}
 
       <!-- Action Panel -->
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -231,20 +280,7 @@ const sentMail = {
         <button class="btn btn-secondary" style="padding:6px 12px; font-size:12px; gap:6px; color:var(--danger);" onclick="sentMail.stopSequence('${email.lead.id}')"><i data-lucide="square" style="width:13px; height:13px;"></i> Stop Campaign</button>
       </div>
 
-      <!-- Tracker details card -->
-      <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-color); padding:12px; border-radius:8px; display:flex; flex-direction:column; gap:4px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <i data-lucide="eye" style="color:var(--success); width:16px; height:16px;"></i>
-            <span style="font-size:13px; font-weight:600;">Open Tracker Stats</span>
-          </div>
-          <div style="display:flex; gap:15px; font-size:12px;">
-            <div>Opens: <strong id="sent-detail-opens" style="color:var(--success);">${email.opens}</strong></div>
-            <div>Last Opened: <strong id="sent-detail-last-opened" style="color:var(--text-primary);">${lastOpenedDate}</strong></div>
-          </div>
-        </div>
-        ${auditHtml}
-      </div>
+      ${trackerStatsHtml}
 
       <!-- Message body preview -->
       <div id="sent-body-preview" style="flex-grow:1; background:rgba(0,0,0,0.15); border:1px solid var(--border-color); padding:20px; border-radius:8px; font-family:'Courier New', Courier, monospace; font-size:14px; color:var(--text-primary); line-height:1.6; white-space:pre-wrap; overflow-y:auto; min-height:300px;">${email.body}</div>

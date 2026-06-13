@@ -56,7 +56,7 @@
         </a>
         <a class="nav-item" data-screen="sent-mail" id="nav-sent-mail">
           <i data-lucide="send"></i>
-          <span>Sent Mail</span>
+          <span>Outreach History</span>
         </a>
         <a class="nav-item" data-screen="planner" id="nav-planner">
           <i data-lucide="calendar"></i>
@@ -132,6 +132,7 @@
             <div class="stat-info">
               <span class="stat-label">Leads Contacted</span>
               <span class="stat-value" id="stat-unique-contacted">0</span>
+              <span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; display: block;">Unique prospects reached</span>
             </div>
             <div class="stat-icon success"><i data-lucide="user-check"></i></div>
           </div>
@@ -139,6 +140,7 @@
             <div class="stat-info">
               <span class="stat-label">Total Emails Sent</span>
               <span class="stat-value" id="stat-total-sent">0</span>
+              <span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; display: block;">Includes sequence follow-ups</span>
             </div>
             <div class="stat-icon cyan"><i data-lucide="mail"></i></div>
           </div>
@@ -516,8 +518,8 @@
       <section id="screen-sent-mail" class="screen">
         <div class="screen-header">
           <div class="header-title">
-            <h1>Sent Mail</h1>
-            <p>Gmail-style archive of outreach emails dispatched to prospects.</p>
+            <h1>Outreach History</h1>
+            <p>Gmail-style archive of sent and failed outreach emails dispatched to prospects.</p>
           </div>
         </div>
 
@@ -527,14 +529,15 @@
             style="padding: 16px; display: flex; flex-direction: column; gap: 15px; height: 75vh; overflow: hidden;">
             <div class="search-wrapper">
               <i data-lucide="search"></i>
-              <input type="text" id="sent-search" class="form-control" placeholder="Search sent emails..."
+              <input type="text" id="sent-search" class="form-control" placeholder="Search outreach history..."
                 oninput="sentMail.filterEmails()">
             </div>
             
-            <div class="toggle-tabs" style="display: flex; gap: 5px; background: rgba(0,0,0,0.15); padding: 4px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); width: 100%; margin-bottom: 2px;">
-              <button type="button" id="sent-filter-all" class="toggle-tab-btn active" onclick="sentMail.setStatusFilter('all')" style="flex:1; border: none; padding: 4px 10px; font-size: 11px; height: 26px; font-weight: 600; text-transform:uppercase; letter-spacing:0.02em;">All</button>
-              <button type="button" id="sent-filter-opened" class="toggle-tab-btn" onclick="sentMail.setStatusFilter('opened')" style="flex:1; border: none; padding: 4px 10px; font-size: 11px; height: 26px; font-weight: 600; text-transform:uppercase; letter-spacing:0.02em; background: none;">Opened</button>
-              <button type="button" id="sent-filter-unopened" class="toggle-tab-btn" onclick="sentMail.setStatusFilter('unopened')" style="flex:1; border: none; padding: 4px 10px; font-size: 11px; height: 26px; font-weight: 600; text-transform:uppercase; letter-spacing:0.02em; background: none;">Unopened</button>
+            <div class="toggle-tabs" style="display: flex; gap: 4px; background: rgba(0,0,0,0.15); padding: 4px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); width: 100%; margin-bottom: 2px;">
+              <button type="button" id="sent-filter-all" class="toggle-tab-btn active" onclick="sentMail.setStatusFilter('all')" style="flex:1; border: none; padding: 4px 6px; font-size: 10px; height: 26px; font-weight: 600; text-transform:uppercase; letter-spacing:0.02em;">All</button>
+              <button type="button" id="sent-filter-sent" class="toggle-tab-btn" onclick="sentMail.setStatusFilter('sent')" style="flex:1; border: none; padding: 4px 6px; font-size: 10px; height: 26px; font-weight: 600; text-transform:uppercase; letter-spacing:0.02em; background: none;">Sent</button>
+              <button type="button" id="sent-filter-opened" class="toggle-tab-btn" onclick="sentMail.setStatusFilter('opened')" style="flex:1; border: none; padding: 4px 6px; font-size: 10px; height: 26px; font-weight: 600; text-transform:uppercase; letter-spacing:0.02em; background: none;">Opened</button>
+              <button type="button" id="sent-filter-failed" class="toggle-tab-btn" onclick="sentMail.setStatusFilter('failed')" style="flex:1; border: none; padding: 4px 6px; font-size: 10px; height: 26px; font-weight: 600; text-transform:uppercase; letter-spacing:0.02em; background: none;">Failed</button>
             </div>
 
             <div style="flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"
