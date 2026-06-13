@@ -13,7 +13,8 @@
     "test:email": "node scripts/test-email.js",
     "test:whatsapp": "node scripts/test-whatsapp.js",
     "test:telegram": "node scripts/test-telegram.js",
-    "auto:scheduler": "node scripts/auto-runner.js"
+    "auto:scheduler": "node scripts/auto-runner.js",
+    "postinstall": "node scripts/install-browser.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
