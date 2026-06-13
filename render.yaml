@@ -1,10 +1,8 @@
 services:
   - type: web
     name: veloxis-outreach-api
-    env: node
+    env: docker
     plan: free
-    buildCommand: npm install
-    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -38,6 +36,5 @@ services:
         sync: false
       - key: TELEGRAM_USERNAME
         sync: false
-      - key: PUPPETEER_CACHE_DIR
-        value: /opt/render/project/src/.cache/puppeteer
+
 

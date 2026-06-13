@@ -1,3 +1,6 @@
+// Initialize log interceptor at the very beginning to capture all logs
+require('./services/logStreamService');
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -38,6 +41,7 @@ const plannerRouter = require('./routes/planner');
 const analyticsRouter = require('./routes/analytics');
 const icpRouter = require('./routes/icp');
 const settingsRouter = require('./routes/settings');
+const logsRouter = require('./routes/logs');
 
 app.use('/api/leads', leadsRouter);
 app.use('/api/email', emailRouter);
@@ -46,6 +50,7 @@ app.use('/api/planner', plannerRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/icp', icpRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/logs', logsRouter);
 
 // Health Check Endpoint for Render / UptimeRobot Keep-Alive
 app.get('/api/health', (req, res) => {

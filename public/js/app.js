@@ -42,6 +42,10 @@ const app = {
     leads.init();
     instagramOutreach.init();
     templates.init();
+    
+    if (typeof terminal !== 'undefined') {
+      terminal.init();
+    }
 
     // Start auto-refresh interval every 30 seconds for live screens (dashboard, analytics, sent-mail)
     setInterval(() => {
