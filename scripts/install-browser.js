@@ -9,9 +9,14 @@ function installBrowser() {
   console.log('NODE_ENV:', process.env.NODE_ENV);
   console.log('------------------------------------------------------');
 
-  if (process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD === 'true') {
-    console.log('⏭️ Skipping Puppeteer browser download (PUPPETEER_SKIP_CHROMIUM_DOWNLOAD is true).');
+  // Only skip download if we have a valid system-installed Chromium executable path specified (e.g., in Docker)
+  if (process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD === 'true' && process.env.PUPPETEER_EXECUTABLE_PATH === '/usr/bin/chromium') {
+    console.log('⏭️ Skipping Puppeteer browser download (using system pre-installed Chromium in Docker).');
     return;
+  }
+
+  if (process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD === 'true') {
+    console.log('⚠️ PUPPETEER_SKIP_CHROMIUM_DOWNLOAD is set to true, but no system Chromium executable path is defined. Overriding to force browser download on Render native Node environment...');
   }
 
   // Detect and resolve cache directory path (aligned with .puppeteerrc.cjs)
