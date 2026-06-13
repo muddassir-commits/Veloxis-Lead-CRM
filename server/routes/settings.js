@@ -44,6 +44,12 @@ router.post('/', async (req, res) => {
       .single();
 
     if (error) throw error;
+    try {
+      const notificationService = require('../services/notificationService');
+      notificationService.notifySettingsUpdated(key);
+    } catch (nErr) {
+      console.error('Failed to dispatch settings updated notification:', nErr.message);
+    }
     res.json({ success: true, setting: data });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

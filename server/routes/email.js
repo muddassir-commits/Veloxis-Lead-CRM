@@ -21,8 +21,20 @@ router.post('/send', async (req, res) => {
     });
 
     if (result.success) {
+      try {
+        const notificationService = require('../services/notificationService');
+        notificationService.notifyEmailSent(to, 'N/A', subject, 'Manual Direct', true);
+      } catch (nErr) {
+        console.error('Failed to dispatch manual email success notification:', nErr.message);
+      }
       res.json({ success: true, messageId: result.messageId });
     } else {
+      try {
+        const notificationService = require('../services/notificationService');
+        notificationService.notifyEmailFailed(to, 'N/A', result.error, true);
+      } catch (nErr) {
+        console.error('Failed to dispatch manual email failure notification:', nErr.message);
+      }
       res.status(500).json({ success: false, error: result.error });
     }
   } catch (err) {
@@ -362,7 +374,20 @@ router.post('/history/:id/resend', async (req, res) => {
     });
 
     if (!sendResult.success) {
+      try {
+        const notificationService = require('../services/notificationService');
+        notificationService.notifyEmailFailed(lead.email, lead.name, sendResult.error, true);
+      } catch (nErr) {
+        console.error('Failed to dispatch manual email resend failure notification:', nErr.message);
+      }
       return res.status(500).json({ success: false, error: sendResult.error });
+    }
+
+    try {
+      const notificationService = require('../services/notificationService');
+      notificationService.notifyEmailSent(lead.email, lead.name, compiledSubject, `Resend Step ${history.step}`, true);
+    } catch (nErr) {
+      console.error('Failed to dispatch manual email resend success notification:', nErr.message);
     }
 
     // Create sequence history for the resent email

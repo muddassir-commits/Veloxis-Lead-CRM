@@ -223,18 +223,33 @@ async function runDailyLeadGeneration(targetCount = 100, customIndustries = null
   leadGenProgress.targetCount = targetCount;
   leadGenProgress.statusText = 'Starting lead generation process...';
 
-  try {
-    let insertedCount = 0;
+  // Fetch active Ideal Customer Profile filters if not customized
+  let industries = customIndustries;
+  let regions = customRegions;
 
-    // Fetch active Ideal Customer Profile filters if not customized
-    let industries = customIndustries;
-    let regions = customRegions;
-
-    if (!industries || !regions) {
+  if (!industries || !regions) {
+    try {
       const { data: icp } = await supabase.from('icps').select('*').limit(1).maybeSingle();
       if (!industries) industries = icp?.industries || ['Real Estate Developer', 'Gyms', 'Dentist', 'MedSpa', 'E-commerce Store', 'Software Agency', 'Coaches & Consultants', 'Education / Coaching'];
       if (!regions) regions = icp?.regions || ['New York', 'Los Angeles', 'London', 'Berlin', 'Paris', 'Madrid', 'Gurgaon', 'Dubai', 'Sydney', 'Auckland', 'Sao Paulo', 'Johannesburg'];
+    } catch (icpErr) {
+      if (!industries) industries = ['Real Estate Developer', 'Gyms', 'Dentist'];
+      if (!regions) regions = ['London', 'New York'];
     }
+  }
+
+  // Trigger start notification
+  try {
+    const notificationService = require('./notificationService');
+    const isManual = (customIndustries !== null || customRegions !== null);
+    const source = isManual ? 'Manual CRM Action' : 'EOD Auto-Scheduler';
+    notificationService.notifyLeadGenStart(source, targetCount, industries.join(', '), regions.join(', '));
+  } catch (nErr) {
+    console.error('Failed to dispatch start lead gen notification:', nErr.message);
+  }
+
+  try {
+    let insertedCount = 0;
 
     console.log(`🤖 Daily Lead Gen: targetting ${targetCount} leads. Mode: ${mode}. Verticals: [${industries.join(', ')}] Locations: [${regions.join(', ')}]`);
 
@@ -473,6 +488,17 @@ async function runDailyLeadGeneration(targetCount = 100, customIndustries = null
     }
 
     console.log(`🎉 Daily Lead Gen Completed. Found and enqueued ${insertedCount} new verified leads.`);
+    
+    // Trigger complete notification
+    try {
+      const notificationService = require('./notificationService');
+      const isManual = (customIndustries !== null || customRegions !== null);
+      const source = isManual ? 'Manual CRM Action' : 'EOD Auto-Scheduler';
+      notificationService.notifyLeadGenComplete(source, insertedCount, insertedCount);
+    } catch (nErr) {
+      console.error('Failed to dispatch complete lead gen notification:', nErr.message);
+    }
+
     leadGenProgress.running = false;
     leadGenProgress.statusText = `Completed! Sourced and enqueued ${insertedCount} new verified leads.`;
     return insertedCount;

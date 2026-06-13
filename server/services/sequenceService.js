@@ -159,6 +159,14 @@ async function sendSequenceStep(seq, scheduleConfig, emailSig) {
   if (!sendResult.success) {
     console.error(`❌ Send failed for lead ${lead.email}: ${sendResult.error}. Pausing sequence.`);
     
+    // Dispatch failure notification
+    try {
+      const notificationService = require('./notificationService');
+      notificationService.notifyEmailFailed(lead.email, lead.name, sendResult.error, false);
+    } catch (nErr) {
+      console.error('Failed to dispatch email failure notification:', nErr.message);
+    }
+    
     // Log failure in sequence history for reporting (truncated to 50 chars max due to VARCHAR(50) DB limit)
     const errorStatus = `Failed: ${sendResult.error || 'SMTP Error'}`.substring(0, 50);
     await supabase.from('sequence_history').insert({
@@ -176,6 +184,14 @@ async function sendSequenceStep(seq, scheduleConfig, emailSig) {
   }
 
   // 5. Successful Send: Record history & tracking logs
+  // Dispatch success notification
+  try {
+    const notificationService = require('./notificationService');
+    notificationService.notifyEmailSent(lead.email, lead.name, compiledSubject, step, false);
+  } catch (nErr) {
+    console.error('Failed to dispatch email success notification:', nErr.message);
+  }
+
   // Create sequence history
   await supabase.from('sequence_history').insert({
     sequence_id: seq.id,

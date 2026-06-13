@@ -109,6 +109,12 @@ router.post('/', async (req, res) => {
       .single();
 
     if (error) throw error;
+    try {
+      const notificationService = require('../services/notificationService');
+      notificationService.notifyLeadCreated(data.name, data.email, data.company);
+    } catch (nErr) {
+      console.error('Failed to dispatch lead created notification:', nErr.message);
+    }
     res.status(201).json({ success: true, lead: data });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -152,6 +158,12 @@ router.put('/:id', async (req, res) => {
       .single();
 
     if (error) throw error;
+    try {
+      const notificationService = require('../services/notificationService');
+      notificationService.notifyLeadUpdated(data.name, data.email, updates);
+    } catch (nErr) {
+      console.error('Failed to dispatch lead updated notification:', nErr.message);
+    }
     res.json({ success: true, lead: data });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -168,6 +180,14 @@ router.delete('/clear/all', async (req, res) => {
       .select('id');
 
     if (error) throw error;
+    if (data && data.length > 0) {
+      try {
+        const notificationService = require('../services/notificationService');
+        notificationService.notifyCrmCleared(data.length);
+      } catch (nErr) {
+        console.error('Failed to dispatch CRM cleared notification:', nErr.message);
+      }
+    }
     res.json({ success: true, count: data ? data.length : 0, message: 'All leads and associated logs deleted successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -178,12 +198,22 @@ router.delete('/clear/all', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('leads')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select('name, email')
+      .maybeSingle();
 
     if (error) throw error;
+    if (data) {
+      try {
+        const notificationService = require('../services/notificationService');
+        notificationService.notifyLeadDeleted(data.name, data.email);
+      } catch (nErr) {
+        console.error('Failed to dispatch lead deleted notification:', nErr.message);
+      }
+    }
     res.json({ success: true, message: 'Lead deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

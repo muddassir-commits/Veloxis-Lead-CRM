@@ -172,7 +172,7 @@ async function processBounceInCRM(emailAddress, bounceSubject) {
     // 1. Locate lead in Supabase
     const { data: lead, error: leadError } = await supabase
       .from('leads')
-      .select('id, name, notes')
+      .select('id, name, company, notes')
       .eq('email', emailAddress)
       .maybeSingle();
       
@@ -182,6 +182,14 @@ async function processBounceInCRM(emailAddress, bounceSubject) {
     }
     
     console.log(`🚨 Bounce Checker: Matching lead found: "${lead.name}" (ID: ${lead.id}). Updating status...`);
+
+    // Dispatch Telegram alert for bounce detection
+    try {
+      const notificationService = require('./notificationService');
+      notificationService.notifyBounceDetected(emailAddress, lead.name, lead.company || 'N/A');
+    } catch (nErr) {
+      console.error('Failed to dispatch bounce Telegram notification:', nErr.message);
+    }
     
     // 2. Update Lead Status to 'Bounced'
     const cleanNotes = (lead.notes || '') + `\n[Bounce Daemon] Email bounced on ${new Date().toLocaleDateString()}: "${bounceSubject}"`;
